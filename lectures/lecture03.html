@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>USP 410/510: Urban Informatics</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Liming Wang" />
+    <meta name="date" content="2022-01-24" />
+    <script src="lecture03_files/header-attrs-2.11/header-attrs.js"></script>
+    <link rel="stylesheet" href="example.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# USP 410/510: Urban Informatics
+### Liming Wang
+### January 24, 2022
+
+---
+
+
+
+
+# Outline
+
+- Python vs R
+- tidy data
+- workflow
+
+---
+
+# Python vs R
+
+- Both are good choices
+  - free and open source
+  - large community with many packages available
+- Python is a general purpose language, while R is a more specialized (statistical programming) language
+  - Python is more prevalent in machine learning
+  - R is widely used in statistics and easier to start with data processing/analytics
+- Mastering either one greatly eases the effort of learning the other (or any other language)
+
+---
+
+# Programming/coding
+
+- Interacting with computers (riding buses vs driving a car)
+  - via software: easy to start; difficult for repetitive/complex tasks
+  - via programming/code: steeper learning curve; greater flexibility
+- Best to learn program/code by doing/using it
+
+---
+
+# tidy data
+
+![:scale 90%](https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png)
+
+---
+
+# tidy workflow
+
+![](https://d33wubrfki0l68.cloudfront.net/795c039ba2520455d833b4034befc8cf360a70ba/558a5/diagrams/data-science-explore.png)
+
+---
+
+# import
+
+- Packages/functions:
+  - `readr`: comma-separated values (read_csv), tab delimited file (read_tsv), fixed width file (read_fwf)
+  - `readxl`: Excel files (read_excel)
+  - `haven`: data format from other statistics packages - SAS, SPSS, Stata, etc
+  - `foreign`: read dbf (shapefile database)
+- More formats/sources: https://www.datacamp.com/community/tutorials/r-data-import-tutorial
+- Demo
+
+---
+
+# import: data.frame vs tibble
+
+- base R packages/functions (foreign) import data as data.frame
+- tidyverse packages (readr, readxl, haven) import data as tibble
+- subtle difference between the two, use `tibble` whenever possible
+  - tibble print outputs are nicer to human
+  - many old packages only take data.frame
+- How to tell which is which
+  - `class(variable_name)`
+- convert between the two:
+  - tibble::as_tibble
+  - as.data.frame
+
+---
+
+# tidy (reshape)
+
+- rename columns of imported data (commonly a data.frame or tibble)
+  - janitor::clean_names()
+  - manual rename with dplyr::rename()
+- tidy data with the `tidyr` package (similar packages: reshape2)
+  - pivot_longer, pivot_wider
+  - https://github.com/gadenbuie/tidyexplain#pivot-wider-and-longer
+
+---
+
+# transform with dplyr
+
+`dplyr` is a grammar of data manipulation, providing a consistent set of verbs that help you solve the most common data manipulation challenges:
+
+- `mutate()` adds new variables that are functions of existing variables
+- `select()` picks variables based on their names.
+- `filter()` picks cases based on their values.
+- `summarise()` reduces multiple values down to a single summary.
+- `arrange()` changes the ordering of the rows.
+- `*_join` joins two data frames
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

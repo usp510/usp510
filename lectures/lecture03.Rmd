@@ -1,0 +1,110 @@
+---
+title: "USP 410/510: Urban Informatics"
+subtitle: ""
+author: "Liming Wang"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  xaringan::moon_reader:
+    css: "example.css"
+    seal: yes
+    nature:
+      highlightStyle: github
+      beforeInit: "macros.js"
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(message=FALSE, warning=F, echo=F)
+options(width = 2000)
+options(repos="https://cran.rstudio.com")
+```
+
+# Outline
+
+- Python vs R
+- tidy data
+- workflow
+
+---
+
+# Python vs R
+
+- Both are good choices
+  - free and open source
+  - large community with many packages available
+- Python is a general purpose language, while R is a more specialized (statistical programming) language
+  - Python is more prevalent in machine learning
+  - R is widely used in statistics and easier to start with data processing/analytics
+- Mastering either one greatly eases the effort of learning the other (or any other language)
+
+---
+
+# Programming/coding
+
+- Interacting with computers (riding buses vs driving a car)
+  - via software: easy to start; difficult for repetitive/complex tasks
+  - via programming/code: steeper learning curve; greater flexibility
+- Best to learn program/code by doing/using it
+
+---
+
+# tidy data
+
+![:scale 90%](https://d33wubrfki0l68.cloudfront.net/6f1ddb544fc5c69a2478e444ab8112fb0eea23f8/91adc/images/tidy-1.png)
+
+---
+
+# tidy workflow
+
+![](https://d33wubrfki0l68.cloudfront.net/795c039ba2520455d833b4034befc8cf360a70ba/558a5/diagrams/data-science-explore.png)
+
+---
+
+# import
+
+- Packages/functions:
+  - `readr`: comma-separated values (read_csv), tab delimited file (read_tsv), fixed width file (read_fwf)
+  - `readxl`: Excel files (read_excel)
+  - `haven`: data format from other statistics packages - SAS, SPSS, Stata, etc
+  - `foreign`: read dbf (shapefile database)
+- More formats/sources: https://www.datacamp.com/community/tutorials/r-data-import-tutorial
+- Demo
+
+---
+
+# import: data.frame vs tibble
+
+- base R packages/functions (foreign) import data as data.frame
+- tidyverse packages (readr, readxl, haven) import data as tibble
+- subtle difference between the two, use `tibble` whenever possible
+  - tibble print outputs are nicer to human
+  - many old packages only take data.frame
+- How to tell which is which
+  - `class(variable_name)`
+- convert between the two:
+  - tibble::as_tibble
+  - as.data.frame
+
+---
+
+# tidy (reshape)
+
+- rename columns of imported data (commonly a data.frame or tibble)
+  - janitor::clean_names()
+  - manual rename with dplyr::rename()
+- tidy data with the `tidyr` package (similar packages: reshape2)
+  - pivot_longer, pivot_wider
+  - https://github.com/gadenbuie/tidyexplain#pivot-wider-and-longer
+
+---
+
+# transform with dplyr
+
+`dplyr` is a grammar of data manipulation, providing a consistent set of verbs that help you solve the most common data manipulation challenges:
+
+- `mutate()` adds new variables that are functions of existing variables
+- `select()` picks variables based on their names.
+- `filter()` picks cases based on their values.
+- `summarise()` reduces multiple values down to a single summary.
+- `arrange()/slice()` changes the ordering of the rows.
+- `*_join` joins two data frames
+

@@ -1,0 +1,170 @@
+---
+title: "USP 410/510: Urban Informatics"
+subtitle: "geospatial data"
+author: "Liming Wang"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  xaringan::moon_reader:
+    css: "example.css"
+    seal: yes
+    nature:
+      highlightStyle: github
+      beforeInit: "macros.js"
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(message=FALSE, warning=F, echo=F)
+options(width = 2000)
+options(repos="https://cran.rstudio.com")
+```
+
+# geospatial data
+
+- types of geospatial data
+  - vector: shapefiles, geodatabase (`sf`, `gdal`, ...)
+  - raster: remote sensing images (`raster` package)
+- Visualization/maps
+  - static
+  - interactive
+- spatial analysis
+  - geocoding
+  - spatal join
+  - and more ...
+
+---
+
+# Import
+
+1. Census geographies (Census block, block group, census tract, county, places/cities, state, ...)
+  - Use `tigris` package
+  - Download from [TIGER/Line Shapefiles](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html)
+  
+1. Streets/Road network
+  - OpenStreetMap
+    - `osmdata`: https://cran.r-project.org/web/packages/osmdata/vignettes/osmdata.html
+    - download from https://wiki.openstreetmap.org/wiki/Downloading_data
+
+---
+
+# Import shapefiles
+
+Many options provided by various packages. `sf` (simple features) is the new standard (and my personal favorite) of handling geospatial data in R
+
+```{r, eval=F}
+#install.packages("sf")
+#May require installing a system package `udunits`, `proj` and `gdal` first (on Mac & linux)
+#library(gdal)
+#readOGR()
+
+library(sf)
+zip_sdf1 <- st_read("~/Downloads/zipcode/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+
+#install.packages("tigris")
+library(tigris)
+zip_sdf2 <- zctas(cb = FALSE, starts_with = NULL, year = 2010, state = "or")
+zip_sdf2
+```
+
+---
+
+# Visualizing shapefiles with `ggmap` (static)
+
+```{r, eval=F}
+library(sf)
+#install.packages("ggmap")
+library(ggplot2)
+
+#mmap <- get_map(source="osm")
+#ggmap(mmap)+
+zip_df3 <- consumption_tidydf3 %>%
+  filter(consumption_type == "actual", year==2019) %>% 
+  group_by(zip5) %>% 
+  summarize(avg_cons=mean(consumption_gallons, na.rm=T),
+            sd_cons=sd(consumption_gallons, na.rm=T),
+            median_log_cons=log(median(consumption_gallons, na.rm=T)))
+  
+zip_sdf3 <- zip_df3 %>% 
+  left_join(zip_sdf2, by=c("zip5"="ZCTA5CE10"))
+  
+
+ggplot(zip_sdf3) +
+  geom_sf(aes(geometry=geometry, fill=median_log_cons)) +
+  labs(x = "", y = "")
+
+```
+
+---
+
+# Visualizing shapefiles with `leaflet` (interactive)
+
+```{r, eval=F warning=FALSE}
+library(sf)
+#install.packages("leaflet")
+library(leaflet)
+
+# m <- leaflet() %>%
+#   addTiles() %>%  # Add default OpenStreetMap map tiles
+#   addPolygons(data=zip_sdf2, )
+
+library(RColorBrewer)
+pal <- colorQuantile(palette = "Reds", 
+                domain = zip_sdf3$median_log_cons, n = 5) # split colors from white to red into 9 even bins
+zip_sdf4 <- st_as_sf(zip_sdf3)
+
+leaflet() %>% addTiles() %>% 
+  addPolygons(data = zip_sdf4, 
+              label= ~median_log_cons, # when you hover over the polygon, it will label the polygon
+              color = "gray", # the color of the border
+              fillColor = ~pal(zip_sdf4$median_log_cons), # the colors inside the polygons
+              weight = 1.0, # the thickness of the border lines
+              opacity = 1.0, # the transparency of the border lines
+              fillOpacity = 0.8)
+```
+
+---
+
+# spatial analysis with R - geocoding
+
+Geocoding converts addresses to points with precise geographic location
+
+```{r, eval=F}
+library(tibble)
+library(dplyr)
+#install.packages("tidygeocoder")
+library(tidygeocoder)
+
+#address_df <- location_df %>% 
+#   slice(9999) %>% 
+#  mutate(address = str_c(service_line_address1, ",", service_line_address2))
+
+address_df <- tibble(address = c(
+  "3235 NE KLICKITAT ST, Portland, OR 97212",
+  "6827 SW 4TH AVENUE, Portland, OR"
+))
+
+
+geocoded_df <- address_df %>% 
+  geocode(address = address, method = "census", verbose = TRUE)
+
+library(sf)
+sdf_addr <- st_as_sf(geocoded_df, coords = c("long", "lat"), 
+                     crs = 4326, agr = "constant")
+
+```
+
+---
+
+# spatial analysis with R - spatial join
+
+```{r, eval=F}
+library(sf)
+# downloaded from 
+ngbhd <- st_read("project/data/neighborhoods.shp")
+
+st_crs(ngbhd) # check projections
+st_crs(sdf_addr)
+#sdf_addr <- st_transform(sdf_addr, crs=st_crs(ngbhd))
+sf::sf_use_s2(FALSE) # bypass Evaluation error: Found 5 features with invalid spherical geometry.
+sdf_addr2 <- st_join(sdf_addr, ngbhd)
+sdf_addr2
+```

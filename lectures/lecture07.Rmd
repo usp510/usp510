@@ -1,0 +1,71 @@
+---
+title: "USP 410/510: Urban Informatics"
+subtitle: "Data Scraping"
+author: "Liming Wang"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  xaringan::moon_reader:
+    css: "example.css"
+    seal: yes
+    nature:
+      highlightStyle: github
+      beforeInit: "macros.js"
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(message=FALSE, warning=F, echo=F)
+options(width = 2000)
+options(repos="https://cran.rstudio.com")
+```
+
+# Data Sources
+- ~~Data files in various format, imported to R with `readr`, `haven`, `foreign` etc~~
+- Application Programming Interface (API)
+- tables, text, and javascript objects/json on webpages 
+- pdf, scanned images, etc
+
+---
+
+# API
+
+1. Search for existing R packages that wrap the API interfaces; 
+  - May requires an API key and have query limits
+  - Find the function(s) you need from the package document
+  - Research the original API document
+2. Use `httr` to construct API calls yourself if there is no existing package
+
+---
+
+# API package examples
+
+- [mapsapi](https://cran.rstudio.com/web/packages/mapsapi/vignettes/intro.html)
+- [rtweet](https://docs.ropensci.org/rtweet/)
+- [LEHD](https://github.com/jamgreen/lehdr)
+- [Census](https://walker-data.com/tidycensus/articles/basic-usage.html)
+
+---
+
+# Direct API calls
+
+- [twitter](https://developer.twitter.com/en/docs/tutorials/getting-started-with-r-and-v2-of-the-twitter-api)
+- [Walkscore](https://www.walkscore.com/professional/api.php)
+- [Portal](https://adus.github.io/portal-documentation/documents/gettingstarted/)
+
+---
+
+# Scrape webpage examples
+
+Steps: https://app.datacamp.com/learn/courses/working-with-web-data-in-r
+
+Find details about home 5915 SE 19TH AVE, Portland, OR 97202
+
+- [Zillow](https://www.zillow.com/homes/5915-SE-19TH-AVE,-Portland,-OR-97202_rb/53891742_zpid/)
+- [Portland Maps](https://www.portlandmaps.com/detail/property/5915-SE-19TH-AVE/R194305_did/)
+- [Home Energy Score](https://us.greenbuildingregistry.com/green-homes/OR10188149)
+
+---
+
+# The Messy World: data in pdf/image files
+
+- OCR: https://cran.r-project.org/web/packages/tesseract/vignettes/intro.html
+- tidytext: text mining in the tidyverse 

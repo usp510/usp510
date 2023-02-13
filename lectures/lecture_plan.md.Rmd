@@ -1,0 +1,22 @@
+
+# Lecture 4: tidy workflow
+- lecture slides
+- live coding demonstrating import - tidy - transform workflow using the water usage data
+
+# Lecture 5: tidy workflow (continued); Rmarkdown
+## tidy workflow (continued)
+- import using rstudio GUI
+- tidy: pivot_longer (pivot_wider) with the water usage data
+- mutate: 
+  - convert ccf to gallons
+  - fix the zipcode typo
+- join
+- group_by + summarize
+- arrange & slice_max/min
+
+## Rmarkdown
+- lecture slides
+- Demo converting water_usage.R into a Rmarkdown
+
+## Class project
+- required project meeting sign-up

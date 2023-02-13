@@ -1,0 +1,63 @@
+---
+title: "USP 410/510: Urban Informatics"
+subtitle: "git/github & beyond"
+author: "Liming Wang"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  xaringan::moon_reader:
+    css: "example.css"
+    seal: yes
+    nature:
+      highlightStyle: github
+      beforeInit: "macros.js"
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(message=FALSE, warning=F, echo=F)
+options(width = 2000)
+options(repos="https://cran.rstudio.com")
+```
+
+# Version Control
+
+- Pain point
+  - Share code/data for collaborative/parallel work
+  - Ability to undo/revert experimental code/document/data 
+  - Think Google docs + track change for your code & data
+- git/github is the most popular option at this point
+  - The learning curve is steep, but smoothed by tools like RStudio (embedded support) and GitHub desktop
+  - [Datacamp Course: Introduction to Git](https://app.datacamp.com/learn/courses/introduction-to-git)
+  - [Happy Git and GitHub for the UseR](https://happygitwithr.com/)
+  - [Github quick start guide](https://docs.github.com/en/get-started/quickstart)
+  - Tutorials on youtube: https://www.youtube.com/results?search_query=learning+git
+
+---
+
+# Beyond this class
+
+- Just in case learning vs just in time learning
+- Leveling up your R/Coding/Data skills
+1. Practice/Use R & packages (dplyr/tidyverse/...) as much as possible whenever you get a chance
+2. Is there a better way to do what I have been doing?
+  - Read R/package documents of the functions you already use
+  - Explore new functions/packages
+3. Ask questions/find answers
+  - stackoverflow: https://stackoverflow.com/questions/tagged/r
+  - Google
+4. Join/build a community
+  - Fellow students using/learning R
+  - \#rstats on twitter: https://twitter.com/hashtag/rstats
+  - stackoverflow: https://stackoverflow.com/questions/tagged/r
+  - meetup, e.g: 
+      - https://www.meetup.com/portland-r-user-group/
+      - https://www.meetup.com/slc-rug/events/284002076
+  - podcasts, e.g.:
+      - [r-podcast](https://r-podcast.org/)
+      - [Not So Standard Deviations](https://nssdeviations.com/)
+      - [Is R the language of geospatial data](https://mapscaping.com/podcast/is-r-the-language-of-geospatial-data/)
+
+---
+
+# Help improve the class
+
+I appreciate your feedback to help improve the class; complete this survey: https://forms.gle/vXc3hZA2KsidkjVX9

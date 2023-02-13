@@ -1,0 +1,88 @@
+---
+title: "USP 410/510: Urban Informatics"
+subtitle: "infographics & dashboard"
+author: "Liming Wang"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  xaringan::moon_reader:
+    css: "example.css"
+    seal: yes
+    nature:
+      highlightStyle: github
+      beforeInit: "macros.js"
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(message=FALSE, warning=F, echo=F)
+options(width = 2000)
+options(repos="https://cran.rstudio.com")
+```
+
+# Infographics
+
+- Static, suitable for print or static web page
+- Self-contained story/narrative with a title, charts, & concise descriptive texts
+- Design
+  - Catching title
+  - Thinking through what story/ies to tell of the data, 
+  - Drill in with one or a few charts/maps/tables & leave out unnecessary information
+  - Concise texts adding details (background, explanation,) to your story, but should not be required to grasp the story
+  - Consider the overall layout
+  - Use photos/icons in the infographics (sparingly)
+  
+---
+
+# Infographics - Example 1
+
+![:scale 60%](https://static01.nyt.com/images/2010/05/02/business/02metrics/02metrics-popup-v3.jpg)
+
+Source: [NYT gas price & VMT per capita](https://archive.nytimes.com/www.nytimes.com/imagepages/2010/05/02/business/02metrics.html?ref=business)
+
+---
+
+# Infographics - Example 2
+
+![:scale 80%](https://static01.nyt.com/newsgraphics/2021/12/03/extreme-weather/35487ab98b560255402684b8271299d07378aa36/tmax-map-945.png)
+Source: [A Vivid View of Extreme Weather: Temperature Records in the U.S. in 2021](https://www.nytimes.com/interactive/2022/01/11/climate/record-temperatures-map-2021.html)
+
+---
+
+# Infographic - ggplot2 + patchwork
+
+- Toronto Shelters: https://rpubs.com/chidungkt/702513
+- Global student to teacher ratios: https://www.cedricscherer.com/2019/05/17/the-evolution-of-a-ggplot-ep.-1/#code
+
+---
+
+# dashboard
+
+- Interactive & live, allowing users/viewers/visitors to interact with & (ideally) get up-to-date information
+- Good practices for infographics still apply to dashboards
+
+--- 
+
+# dashboard - Examples
+
+- [Coronavirus in the U.S.: Latest Map and Case Count](https://www.nytimes.com/interactive/2021/us/covid-cases.html)
+- [Waste Lands - America’S Forgotten Nuclear Legacy](https://beta.rstudioconnect.com/jjallaire/htmlwidgets-waste-sites/htmlwidgets-waste-sites.html)
+
+---
+
+# dashboard w/ flexdashboard & shinydashboard
+
+- flexdashboard: https://pkgs.rstudio.com/flexdashboard/articles/flexdashboard.html
+- shinydashboard: https://rstudio.github.io/shinydashboard/get_started.html
+
+---
+
+# dashboard w/ flexdashboard example
+
+- [Waste Lands - America’S Forgotten Nuclear Legacy](https://beta.rstudioconnect.com/jjallaire/htmlwidgets-waste-sites/htmlwidgets-waste-sites.html)
+
+---
+
+# Deploying your dashboard
+
+- RStudio Connect: https://beta.rstudioconnect.com/
+  - Example: https://beta.rstudioconnect.com/connect/#/apps/f31bb89c-33f1-4c21-bc3c-669124221539/access/2704
+- RPubs: https://rpubs.com/

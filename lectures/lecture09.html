@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>USP 410/510: Urban Informatics</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Liming Wang" />
+    <meta name="date" content="2022-02-28" />
+    <script src="lecture09_files/header-attrs-2.11/header-attrs.js"></script>
+    <link rel="stylesheet" href="example.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# USP 410/510: Urban Informatics
+## infographics &amp; dashboard
+### Liming Wang
+### February 28, 2022
+
+---
+
+
+
+
+# Infographics
+
+- Static, suitable for print or static web page
+- Self-contained story/narrative with a title, charts, &amp; concise descriptive texts
+- Design
+  - Catching title
+  - Thinking through what story/ies to tell of the data, 
+  - Drill in with one or a few charts/maps/tables &amp; leave out unnecessary information
+  - Concise texts adding details (background, explanation,) to your story, but should not be required to grasp the story
+  - Consider the overall layout
+  - Use photos/icons in the infographics (sparingly)
+  
+---
+
+# Infographics - Example 1
+
+![:scale 60%](https://static01.nyt.com/images/2010/05/02/business/02metrics/02metrics-popup-v3.jpg)
+
+Source: [NYT gas price &amp; VMT per capita](https://archive.nytimes.com/www.nytimes.com/imagepages/2010/05/02/business/02metrics.html?ref=business)
+
+---
+
+# Infographics - Example 2
+
+![:scale 80%](https://static01.nyt.com/newsgraphics/2021/12/03/extreme-weather/35487ab98b560255402684b8271299d07378aa36/tmax-map-945.png)
+Source: [A Vivid View of Extreme Weather: Temperature Records in the U.S. in 2021](https://www.nytimes.com/interactive/2022/01/11/climate/record-temperatures-map-2021.html)
+
+---
+
+# Infographics - ggplot2 + patchwork
+
+
+
+---
+
+# Infographic - ggplot2 + patchwork
+
+- Toronto Shelters: https://rpubs.com/chidungkt/702513
+- Global student to teacher ratios: https://www.cedricscherer.com/2019/05/17/the-evolution-of-a-ggplot-ep.-1/#code
+
+---
+
+# dashboard
+
+- Interactive &amp; live, allowing users/viewers/visitors to interact with &amp; (ideally) get up-to-date information
+- Good practices for infographics still apply to dashboards
+
+--- 
+
+# dashboard - Examples
+
+- [Coronavirus in the U.S.: Latest Map and Case Count](https://www.nytimes.com/interactive/2021/us/covid-cases.html)
+- [WASTE LANDS - AMERICA’S FORGOTTEN NUCLEAR LEGACY](https://beta.rstudioconnect.com/jjallaire/htmlwidgets-waste-sites/htmlwidgets-waste-sites.html)
+
+---
+
+# dashboard w/ flexdashboard &amp; shinydashboard
+
+- flexdashboard: https://pkgs.rstudio.com/flexdashboard/articles/flexdashboard.html
+- shinydashboard: https://rstudio.github.io/shinydashboard/get_started.html
+
+---
+
+# dashboard w/ flexdashboard example
+
+- [WASTE LANDS - AMERICA’S FORGOTTEN NUCLEAR LEGACY](https://beta.rstudioconnect.com/jjallaire/htmlwidgets-waste-sites/htmlwidgets-waste-sites.html)
+
+---
+
+# Hosting your dashboard
+
+- RStudio Connect: https://beta.rstudioconnect.com/
+- RPubs: https://rpubs.com/
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

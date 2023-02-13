@@ -1,0 +1,99 @@
+---
+title: "USP 410/510: Urban Informatics"
+subtitle: "Visualizing data with ggplot2"
+author: "Liming Wang"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  xaringan::moon_reader:
+    css: "example.css"
+    seal: yes
+    nature:
+      highlightStyle: github
+      beforeInit: "macros.js"
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(message=FALSE, warning=F, echo=F)
+options(width = 2000)
+options(repos="https://cran.rstudio.com")
+```
+
+# ggplot2 - grammar of graphics
+
+`ggplot` is a grammar of graphics, a coherent system for describing and building graphs.
+
+- **data (data frame): ggplot(dataset)**
+- **aesthetic mapping (coordination system, color, size, line type, position etc): aes()**
+- **geometries: geom_point, geom_line, geom_bar, ...**
+- stat (summarization/transformation of data): stat_smooth,
+- scale (map data values into computer values): scale_y_continuous(labels=percent), scale_x_log10, ...
+- facet: facet_wrap, facet_grid
+- fine tuning 
+    - coordinate: `coordinate_*`
+    - theme: `theme_bw`
+    - labels: `labs(x=..., y=...)`
+
+---
+
+# ggplot2 - grammar of graphics
+
+Code template:
+
+```
+ggplot(data = <DATA>) +                             # data
+  <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>)) +      # aes & geometries
+  facet/theme_bw/labs()/...                         # fine tuning
+```
+
+---
+
+# Types of Graphics
+
+- numeric variables represent quantities, e.g. time, volume, money, distance, weight
+  - histogram
+  - scatter plot
+- categorical variables represent categories/labels, 
+  - nominal categorical: no innate order between values
+  - ordinal categorical: with order between values
+    - bar plot
+- mix & match (choose x & y axis)
+  - ridgeline plot (boxplot if you must)
+  - scatter plot
+  
+---
+
+# esquisse
+
+[Interactively explore data by visualizing it with the ggplot2 package](https://github.com/dreamRs/esquisse)
+
+```{r, eval=F, include=TRUE}
+install.packages("esquisse")
+mtcars <- mtcars %>% 
+  mutate(am = as.character(am))
+esquisse::esquisser()
+```
+
+---
+
+# Interactive Plots
+- plotly
+- leaflet, tmap for interactive maps
+
+```{r, echo=F}
+#install.packages("plotly")
+library(ggplot2)
+library(plotly)
+p <- ggplot(data=mtcars) +
+  geom_point(aes(x=wt, y=mpg, size=hp, color=as.factor(gear)))
+  
+ggplotly(p)
+```
+
+---
+
+# ggplot2 - Resources/References
+
+- r graph gallery: https://r-graph-gallery.com/
+- ggplot2 cookbook: https://r-graphics.org/
+- ggplot2 cheatsheet: https://www.rstudio.com/resources/cheatsheets/
+- ggplot2: Elegant Graphics for Data Analysis: https://ggplot2-book.org/

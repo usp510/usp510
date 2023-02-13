@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>USP 410/510: Urban Informatics</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Liming Wang" />
+    <meta name="date" content="2023-01-07" />
+    <script src="lecture01_files/header-attrs-2.17/header-attrs.js"></script>
+    <link rel="stylesheet" href="example.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# USP 410/510: Urban Informatics
+]
+.subtitle[
+## Course Overview and Computer Setup for the Class
+]
+.author[
+### Liming Wang
+]
+.date[
+### January 07, 2023
+]
+
+---
+
+
+
+
+# Outline
+
+- Syllabus
+- What is urban informatics?
+
+---
+
+# Informatics
+
+- Informatics: the study of computational systems, especially those for data storage and retrieval
+
+  - health informatics: To provide solutions for problems related to data, information, and knowledge processing and to study general principles of processing data information and knowledge in medicine and healthcare
+  - bioinformatics: develops methods and software tools for understanding biological data, in particular when the data sets are large and complex.
+  - geoinformatics: the science and the technology which develops and uses information science infrastructure to address the problems of geography, cartography, geosciences and related branches of science and engineering.
+
+---
+
+# Urban Informatics
+
+Urban Informatics: an interdisciplinary approach to understanding, managing, and designing the city using systematic theories and methods based on new information technologies.
+
+
+---
+
+# Urban Informatics
+
+- Information retrieval and storage
+- Information processing &amp; analytics
+- Visualizing Information
+- Information presentation and communication
+- Workflow &amp; best practices (reproducible, open data and open source)
+
+---
+
+# Sample projects
+
+- [COVID cases on ourworldindata](https://https://ourworldindata.org/explorers/coronavirus-data-explorer?zoomToSelection=true&amp;time=2020-03-01..latest&amp;facet=none&amp;pickerSort=desc&amp;pickerMetric=new_cases_smoothed_per_million&amp;Metric=Confirmed+cases&amp;Interval=7-day+rolling+average&amp;Relative+to+Population=true&amp;Color+by+test+positivity=false&amp;country=IND~USA~GBR~CAN~DEU~FRA)
+- [COVID Map by Johns Hopkins](https://coronavirus.jhu.edu/us-map)
+
+---
+
+# Last year's class projects
+
+- [20-minute neighorhood]()
+- [Portland Water Usage Neighborhood Map](https://beta.rstudioconnect.com/content/bd87f172-edb4-47b2-b7ff-5cc3f4c88720/)
+- [How COVID affected traffic pattern in Portland]()
+- [COVID's effect on Households in the US]()
+- [Client profile of Hacienda CDC](https://rpubs.com/sarjon2/879141)
+
+---
+
+# Data Scienice
+
+![](https://images.squarespace-cdn.com/content/v1/5150aec6e4b0e340ec52710a/1364352051365-HZAS3CLBF7ABLE3F5OBY/Data_Science_VD.png?format=750w)
+
+Source: http://drewconway.com/zia/2013/3/26/the-data-science-venn-diagram
+
+---
+
+# Urban Data Science Program (UC Berkeley)
+
+&gt; The Urban Science domain emphasis explores the theories and methods used to understand the deep structure of how cities function and the potential of urban policies and planning to shape more equitable futures. Topics include sustainability, mapping, visualization, design, urban economic analysis, smart urbanism, metropolitan structure, urban communities, and place-making, among others. 
+
+--[UC Berkeley](https://data.berkeley.edu/degrees/domain-emphasis/urban-science)
+
+---
+
+# Urban Data Science series (USC)
+
+&gt; This course series takes a computational social science approach to working with urban data. It uses Python and Jupyter notebooks to introduce coding and statistical methods that students can reproduce and experiment with in the cloud. 
+
+--[USC](https://github.com/gboeing/ppd599)
+
+---
+
+# Programming/coding
+
+- Interacting with computers (riding buses vs driving a car)
+  - via packaged software (app): easy to start; difficult for repetitive/complex tasks
+  - via program/code: steeper learning curve; greater flexibility
+- The best way to learn programming/coding is by doing/using it
+
+---
+
+# Choice of programing language
+
+[![](figs/01-language-ranking.png)](https://pypl.github.io/PYPL.html)
+
+---
+
+# Structure of the class
+
+- Lectures: general topics; Q&amp;A + Discussion
+  - Labs: Live code session working on an actual project
+- [DataCamp](https://datacamp.com): learn and practice R programming on specific topic
+  - finish 9 (out of 12) courses by the end of the term
+  - ideally in sync with class progress
+- Class project: apply the knowledge and programming skills you learn to a real project
+- Office hours: Q&amp;A, coding help, project brainstorming; anything else
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
