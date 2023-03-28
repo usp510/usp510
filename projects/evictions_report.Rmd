@@ -1,0 +1,287 @@
+---
+title: "Evictions in Regulated Affordable Housing in Multnomah County, 2019\u20132022"
+author: "Jenny Mazzella and Amanda Ufheil-Somers"
+date: "24 March 2023"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+source("load_data.R")
+source("SubReg_Multnomah.R")
+source("geocoding and map.R")
+source("Tables.R")
+
+# Formatting
+comma <- function(x) format(x, digits = 2, big.mark = ",")
+```
+
+## Why Eviction Data Matters
+
+The process and consequences of eviction have become high-profile issues in public discourse over the past several years. Being evicted causes major disruptions to people's lives, with cascading and often lasting impacts on the ability to secure new housing, stay employed, and keep families together. During the first year of the COVID-19 pandemic, the moratoria on no-cause evictions from the CDC and state and local governments explicitly acknowledged the importance of stable housing on individual and public health and—at least temporarily—brought eviction to the forefront of national news.
+
+Despite this increased attention, data sources on evictions are often difficult to access and inconsistent across different jurisdictions. Especially little is known about evictions filed against residents of regulated affordable housing.
+
+Regulated, or "Big A", affordable housing describes properties whose rents are capped according to federal rules, or whose tenants receive direct or indirect subsidies from public sources. Affordable housing is intended to be a place where low-income people can rent decent housing that they may not otherwise be able to afford or qualify for in the broader housing market. In this way, most people think of affordable housing as relatively stable&mdash;for many, it is the housing of last resort.
+
+Yet residents of affordable housing can also be served with evictions. For people who already have difficulty accessing housing, or have particularly limited options in tight housing markets, evictions can have devastating effects. Examining trends in evictions in regulated affordable housing is an important first step to understanding how well our publicly-supported housing serves its residents and fulfills its mission to create housing stability for lower-income people.
+
+## Analytical Approach
+
+This analysis examines trends in evictions filed against residents of affordable housing in Multnomah County between January 2019 and October 2022. We thank the [Evicted in Oregon](https://www.evictedinoregon.com) collective---particularly Dr. Lisa Bates and Dr. Azad Amir-Ghassemi---for sharing their data with us for this project. Evicted in Oregon built this data set from disparate sources and conducted some initial cleaning and compiling. Much of our analysis went deeper into cleaning and sorting this data. We then pulled out some high-level trends and considered the data's spatial dimensions.
+
+### Data Sources
+We received two data sets from Evicted in Oregon:
+
+1. A csv of all eviction cases filed in county court for all counties in Oregon between January 2019 and October 2022.
+2. A csv of regulated affordable properties at which eviction cases had been filed between January 2019 and October 2022. This data came from Oregon Housing and Community Services.
+
+As shown below, each original csv contained data stored primarily as character strings. Because of this format, many of the values were inconsistent across different observations, even when they should match, such as with property address, or owner name. There were also many missing values, captured as either NA or "---".
+
+```{r structure: case-level data}
+glimpse(feds)
+```
+
+```{r structure: property-level data}
+glimpse(property_counts)
+```
+
+### Data Processing
+
+To narrow the focus of our cleaning and analytical efforts, we focused only on eviction cases in Multnomah County. Per Evicted in Oregon member Dr. Bates, Multnomah County's eviction records are the most complete and consistent. We also limited our analysis to cases that had been closed&mdash;that is, cases that had ended in eviction or dismissal&mdash;so we could look at trends in case outcomes. This means we did exclude some cases that were filed but not resolved within the timeframe of the dataset.
+
+With those parameters, we narrowed the dataset of eviction case records to `r comma(nrow(subreg_mult))` observations, as shown below. The final number of property records was `r nrow(property_counts)`.
+
+```{r summary: subreg_mult}
+print(subreg_mult)
+```
+
+We attempted to convert the raw data from these two sources into tidy formats in order to be able to run statistical analyses. This process required transforming the values of several variables through rewriting. We used a combination of replacement tools from the stringr, dplyr, lubridate, and forcats packages to create consistent character strings or change the variable types. Because of the extensive code such rewriting required, we decided to focus on three primary character variables: owner type, owner, and management company. Examples of this processing are shown below:
+
+```{r example: dplyr cleaning, eval = FALSE, echo = TRUE}
+# Clean values: owner_type
+subreg_mult <- subreg_mult %>%  #rewrite similar values
+  mutate(owner_type = case_when(
+    owner_type %in% c("non_profit", "non-profit", "limited dividend") ~ "nonprofit",
+    owner_type %in% c("for_profit", "profit") ~ "for profit",
+    owner_type %in% c("housing authority", "government") ~ "public entity",
+    owner_type == owner_type & owner == "home forward" ~ "public entity",
+    TRUE ~ owner_type))
+```
+
+```{r example: stringr cleaning, eval = FALSE, echo = TRUE}
+# Create new column with cleaner OWNER names 
+subreg_mult <- subreg_mult %>% 
+  mutate(owner_clean = 
+           str_replace_all(owner, c(
+             "\\." = "",
+             "," = "",
+             "cascadia behavioral healthcare inc\\s.*$" = "cascadia behavioral healthcare inc",
+             "home forward\\s.*$" = "home forward",
+             "human solutions\\s.*$" = "human solutions",
+             "hacienda community development\\s.*$" = "hacienda community development",
+             "specialized housing\\s.*$" = "specialized housing inc",
+             "quadriplegics united against dependency\\s.*$" =  "quadriplegics united against dependency",
+             "reach community development\\s.*$" = "reach community development",
+             "central city housing llc" = "central city concern",
+             "cascade housing association\\s.*$" = "cascade housing association",
+             "bell david.*$" = "david bell",
+             "heartland columbia.*$" = "heartland columbia",
+             "brenneke tom (gm buckman heights llc)" = "tom brenneke",
+             "limited partnership" = "lp",
+             "menashe michael" = "michael menashe",
+             "housing authority of portland" = "home forward"
+           )))
+```
+
+### Variables of Interest
+
+Each observation in our primary data set represents one eviction case filed in court. The primary variable we considered was the outcome of that case, simplified between whether the eviction was carried out or not. There are several intermediate steps and statuses that a case can have between filing and closure, including stipulated agreement, if a lien was placed on the property, if a judge issued a writ, etc. For this analysis, we focused on the final outcome.
+
+The owner variable describes the registered owner of a property. This value was often inconsistent with other indications of ownership, such as the name of the plaintiff in the eviction filing. Many properties are registered to an LLC whose only asset is that single property, though the LLC itself may be owned by a larger entity. These inconsistencies made it hard to draw conclusions about total ownership and control of properties across the county without more detailed mapping of property and owner relationships.
+
+```{r variable: owner}
+subreg_mult %>%
+  group_by(owner_clean) %>%
+  tally()
+```
+
+The management variable describes the entity that is registered with the county or state as responsible for the day-to-day management of the property and handling tenant services. This variable was also inconsistently entered, even for eviction cases that were linked to the same property. For some cases, the property owner was listed as the manager; in others, management was contracted out to another company. As with property owners, inconsistency in this variable made it difficult to accurately observe trends in the relationship between eviction cases and property management.
+
+```{r variable: management}
+subreg_mult %>%
+  group_by(management_clean) %>%
+  tally()
+```
+
+The owner type variable describes the category to which the property owner belongs, according to the state's classification system. This variable originally had inconsistency in its formatting, but we were able to narrow it down to 7 classes. We further consolidated these into the categories for profit, multiple, nonprofit, and public entity. Additionally, there were 13 cases for which we could not accurately assign ownership; these were excluded from our analysis.
+
+```{r variable: owner_type}
+subreg_mult %>%
+  group_by(owner_type) %>%
+  tally()
+```
+
+## Key Findings
+
+### High Level Eviction Trends
+
+As a first step, we tried to see how many evictions were filed each month in regulated affordable housing in the study period. We then disaggregated these counts by owner type.
+
+It is important to note that the steep drop in eviction cases filed starting in March 2020 reflects the beginning of the COVID-19 pandemic and then the State of Oregon's moratorium on no-cause evictions. The moratorium began on April 1, 2020 and ended on June 30, 2021. Parallel moratoria in Portland and Multnomah County expired earlier, in February 2021. Protections from eviction for nonpayment of rent continued until June 30, 2022.
+
+```{r plot: time series}
+# Time series plot of eviction filings by date
+feds_time_plot <- subreg_mult %>%
+  filter(owner_type != "NA") %>%
+  ggplot(aes(x = as.Date(as.yearmon(date)), fill = factor(owner_type)))
+
+# Bar graph
+feds_time_plot +
+  geom_bar() +
+  scale_x_date(breaks = seq(as.Date("2019-01-02"), as.Date("2022-10-13"),
+              by="3 months"), date_labels = "%b %Y") +
+  scale_y_continuous(limits = c(0,90), expand = c(0.02, 0.02)) +
+  labs(title = "Eviction Filings in Multnomah County, January 2019-October 2022",
+       x="Month",
+       y="Number of Filings",
+       fill="Owner Type") +
+  theme(
+    axis.text.x = element_text(angle = 90),
+    panel.grid = element_blank()
+  )
+```
+
+Eviction filings did not drop to zero because the moratorium allowed evictions to be filed "for cause." For cause evictions require landlords to claim that tenants have violated a term of the lease. The state moratorium exempted nonpayment of rent from the allowable list of causes.
+
+The graph shows that eviction filings declined across all owner types during the moratorium. Evictions initiated by for profit landlords decreased dramatically as a share total filings. Our datasets did not include information on the causes listed in these eviction filings; linking cases to the cited cause would allow a closer analysis of the most common reasons tenants are being evicted from regulated affordable housing.
+
+We also looked at trends in the outcomes of eviction filings. Of each of these closed cases, `r sum(ot_outcome$eviction)` filings resulted in executed evictions, while `r sum(ot_outcome$dismissal)` cases were dismissed. The remaining `r sum(ot_outcome$other)` cases had other outcomes. It is not always clear what these other outcomes are, but they could include tenants moving out without a formal eviction ruling.
+
+Grouping these outcomes by owner type shows some interesting trends in eviction outcomes. Public entities, which include the Portland Housing Bureau and the region's public housing authority, Home Forward, filed 349 evictions, of which 48 percent resulted in evictions. This was the highest rate of executed evictions during the study period. More than 800 eviction cases were filed by nonprofit owners of affordable housing, of which 45 percent were executed.
+
+```{r plot: total evictions by owner type}
+# Successful evictions by owner type
+ot_outcome %>%
+  ggplot(aes(x = owner_type, y = total_feds, fill = factor(owner_type))) +
+  geom_col() +
+  geom_text(aes(label = total_feds, y = total_feds + 25),
+            position = position_dodge2(0.9),
+            fontface = "bold") +
+  labs(title = "Eviction Cases Filed by Owner Type",
+       x = "Owner Type",
+       y = "Total Eviction Filings") +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank())
+```
+
+``` {r plot: successful evictions by owner type}
+ot_pct_evicted <- ot_outcome %>%  # create percent evicted variable
+  mutate(pct_evicted = eviction/total_feds)
+
+ot_pct_evicted %>% #
+  ggplot(aes(x = owner_type,
+             y = pct_evicted,
+             fill = factor(owner_type),
+             label = scales::percent(pct_evicted))) +
+  scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
+  geom_col() +
+  geom_text(aes(y = pct_evicted + 0.035),
+            position = position_dodge2(0.9),
+            fontface = "bold") +
+  labs(title = "Share of Cases that Ended in Eviction by Owner Type",
+       x = "Owner Type", y = "Percent of Filings Ending in Eviction") +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank())
+```
+
+### Spatial Analysis of Evictions by Property
+
+We next decided to map eviction filings in order to both observe spatial patterns and create a tool for investigating these evictions by property. This process involved geocoding the dataset of regulated affordable properties using the tidygeocoder package with a Google API. We then joined this with the eviction filings data (matched by street address) in order to maximize the amount of information aggregated at the property level. Leaflet was used to map the properties, rendered by owner type (color) and number of total eviction filings (circle radius). Clickable pop-ups were generated to display key property and eviction information. Given Multnomah County's involvement in overseeing housing and homeless services, County Commissioner Districts were underlaid using the simple features package.
+
+Mapping eviction cases shows clusters of eviction activity in affordable housing in the downtown area. There are also clusters of properties with larger numbers of eviction cases filed in East Portland, along SE Stark Street.
+
+```{r example: Leaflet map, eval = FALSE, echo = TRUE}
+
+#Create Leaflet map
+property_map <- leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = county_d, color = "navy", fillOpacity = 0.1, weight = 2) %>%
+  addCircles(data = joined_df_short, lng = ~long.x, lat = ~lat.x,
+             color = ~pal(owner_type.y),
+             radius = ~total_feds_rev * 4,
+             popup = paste(
+               joined_df_short$name, "<br>", 
+               joined_df_short$full_address, "<br>",
+               "Owner:", joined_df_short$owner_map, "<br>", 
+               "Management:", joined_df_short$management_map, "<br>",
+               "Owner Type:", str_to_title(joined_df_short$owner_type.y), "<br>",
+               "Units:", joined_df_short$units.x, 
+               paste0("(",joined_df_short$assisted_units.x," assisted)"), "<br>", 
+               "Filings:", joined_df_short$total_feds_rev, "<br>",
+               "Evictions:", joined_df_short$total_evictions
+               )) %>%
+  addLegend(data = joined_df_short, "topright", pal = pal, 
+            values = ~owner_type.y,
+            title = "Property Owner Type",
+            opacity = 1) %>%
+  addLegend(data = county_d, "bottomright", color = "navy",
+            opacity = 1,
+            label = "Multnomah County Districts")
+```
+
+```{r map: properties}
+property_map
+```
+### Property, Owner, and Management Statistics
+
+We also produced tables of basic eviction statistics by property, owner, and management company. This allows for an alternative method of examining properties where evictions are occurring, and begins to explore *who* is evicting and the process of their evictions. While more research is needed to rectify inconsistencies in owner and management reporting, as well as tease out shell companies, this serves as a starting point. Counts and percentages (out of total filings per entity) were calculated for outcomes - i.e. evictions and dismissals - as well as for accompanied processes, including stipulated agreements, liens, writs, and defaults. (See Evicted in Oregon's explanation of [How Evictions Work](https://www.evictedinoregon.com/how-evictions-work) to learn more about these terms.) 
+
+```{r example: property statistics, eval = FALSE, echo = TRUE}
+
+# Create tibble of outcome statistics by PROPERTY
+source("geocoding and map.R")
+property_stats <- joined_df_short %>%
+  group_by(full_address) %>%
+  summarize(owner_clean = first(owner_clean),
+            total_filings = n(),
+            owner_clean = first(owner_clean),
+            evictions = sum(eviction == "yes"),
+            p_e = sum(eviction == "yes")/n(),
+            dismissals = sum(dismissal == "yes"),
+            p_di = sum(dismissal == "yes")/n(),
+            default. = sum(default == "yes"),
+            p_de = sum(default == "yes")/n(),
+            stipulated_agreement = sum(sa == "yes"),
+            p_sa = sum(sa == "yes")/n(),
+            lien. = sum(lien == "yes"),
+            p_l = sum(lien == "yes")/n(),
+            writ. = sum(writ == "yes"),
+            p_w = sum(writ == "yes")/n()) %>%
+  arrange(desc(evictions)) %>%
+  filter(!is.na(full_address))
+```
+
+The DT package was used to format the tables in a more readable, web-friendly way that allows for sorting and searching. 
+
+This analysis shows, for example, that the property with the highest number of filings (52) and executed evictions (29) was the nonprofit-owned Clifford Apartments in Southeast Portland. This means that 56 percent of the cases filed by this property resulted in eviction. This is higher than the rate of executed evictions for nonprofits as a whole (48 percent).    
+
+***Example of table produced by the above code:***
+```{r table: owner statistics}
+property_stats_format
+```
+
+## Directions for Further Analysis
+
+An important precursor for further analysis is to verify all the property information, including ownership, corporate structure, and management. This detailed cleaning and relating would allow better analysis of property-level and owner-level trends.
+
+Incorporating the causes listed in each eviction filing would also allow any trends in issues that lead to eviction filings and what is more or less likely to make a case end in an executed eviction. It is likely that properties with high numbers of eviction cases are in properties that have more restrictive lease terms, such as clauses that require sobriety.
+
+Another avenue for deeper exploration is looking at the affordability levels and types of units for which these cases are being filed and succeeding. If there are trends in higher cases against lower-income people, or in certain types of housing, like permanent supportive housing, or family housing, this analysis could point toward policy interventions to improve housing stability in affordable housing.

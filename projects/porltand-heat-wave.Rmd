@@ -1,0 +1,266 @@
+---
+title: Mapping Land Surface Temperature and Identification of Health Disadvantaged
+  Census Tracts During the June 2021 Portland Heat Dome Using the US Climate and Economic
+  Justice Screening Tool
+author: "Surya Joshi and Greg Cermak"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+During June 25-29, 2021 Portland Oregon experienced a heat dome where temperatures in Portland hit a record 115 F. At least 96 people died in Oregon, most of whom were home alone and had no air-conditioning units. In a study after it was determined that the heat wave was a freak, 10,000-year event. According to the US Environmental Protection Agency (EPA), heat islands contribute to higher daytime temperatures, reduced nighttime cooling, and higher air-pollution levels. These, in turn, contribute to heat-related deaths and heat-related illnesses such as general discomfort, respiratory difficulties, heat cramps, heat exhaustion, and non-fatal heat stroke. There are a number of methods for deriving a heat vulnerability index. In this study, we develop a raster land surface temperature (LST) map of the City of Portland during the heat dome from the EcoStress data set available from NASA. Then, using the White House Council on Environmental Quality's (CEQ) [Climate and Economic Justice Screening Tool](https://screeningtool.geoplatform.gov/en/methodology#3/33.47/-97.5) (CEJST) we find census tracts within the City of Portland that are identified as health disadvantaged to help target short and long-term interventions. We identified seven census tracts, most located on the Portland East side along Interstate 205. Census tract 41051008302 was the most interesting, having a mean LST of 86.28 F with a standard deviation of 3.61 F. The census tract includes heat islands at the base of the forested and cooler Kelly Butte Natural Area.
+
+## Introduction: June 25 - 29, 2021 Portland Heat Dome
+
+During June 25-29, 2021 Portland Oregon experienced a heat dome where temperatures in Portland hit a record 115 F. See Figure 1: Temperature History in June 2021 at Portland International Airport. At least 96 people died in Oregon, most of whom were home alone and had no air-conditioning units.
+
+Karen McKinnon, assistant professor of climate science at UCLA, co-authored a study to determine if climate models could predict such an extraordinary event and if the extreme heat is a sign of more heat waves in the future. The study determined that the heat wave was a freak, 10,000-year event [@samayoa_pacific_2022].
+
+During the summer of 2022, several Oregon cities experienced the hottest July and August on record. Portland also had seven consecutive days at or above 95 degrees, breaking its previous record set in 1981.
+
+Paul Loikith, associate professor in the department of geography at Portland State University said the summer of 2022 weather events weren't as extreme, but they do start to add up [@samayoa_pacific_2022].
+
+"As everything gets warmer, heat waves that maybe used to be in the low 90s, all of sudden they're starting to be more in the mid-90s," he said. "So, we start to see these streaks or these records of days above certain heat thresholds increasing."
+
+When heat waves happen in the future, they will be even hotter than they were today.
+
+![Temperature History in June 2021 at Portland International Airport. Source: WeatherSpark.com](Temperature_history_in_June_2021_at_Portland_International_Airport_2x.png){width="60%"}
+
+## Heat Island Impacts and Vulnerability
+
+According to the US EPA, heat islands contribute to higher daytime temperatures, reduced nighttime cooling, and higher air-pollution levels. These, in turn, contribute to heat-related deaths and heat-related illnesses such as general discomfort, respiratory difficulties, heat cramps, heat exhaustion, and non-fatal heat stroke [@us_epa_heat_2014].
+
+Heat islands can exacerbate heat waves, impacting sensitive populations that are particularly at risk during these events [@us_epa_heat_2014]. These populations include:
+
+-   Older adults.
+-   Young children.
+-   Populations with low-income.
+-   People who spend their working hours outdoors.
+-   People in poor health.
+
+Heat vulnerability is determined by exposure, sensitivity and adaptive capacity each which has a number appropriate measures [@conlon_arset_2022]. See Figure 2: Defining Vulnerability. Heat vulnerability indexes can be built using a combination of these measures.
+
+![Defining Heat Vulnerability. Source: NASA ARSET](Defining-Heat-Vulnerability.png){width="60%"}
+
+## Research Questions
+
+1.  Develop a raster land surface temperature (LST) map of the City of Portland during the June 2021 heat dome from the EcoStress data set available from NASA.
+2.  Then, using the White House Council on Environmental Quality's (CEQ) Climate and Economic Justice Screening Tool (CEJST), find census tracts within the City of Portland that are identified as health disadvantaged.
+
+## Methodology
+
+The inspiration for our USP 510 project was a blog post by Katie Jolly, NYT-style Urban Heat Island Maps [@jolly_nyt-style_2019]. In the blog, Jolly was inspired to replicate the maps of urban heat islands in r from a New York Times article, Summer in the City Is Hot, But Some Neighborhoods Suffer More [@popovich_summer_2019]. We wanted to create an identical set of maps for Portland Oregon using data from the heat dome event, June 25-29, 2021.
+
+Using instructions from a tutorial on Urban Canopy, How to Map Your Urban Heat Island, we developed a land surface temperature map for the City of Portland OR [@noauthor_how_nodate]. We obtained images of Portland urban heat islands from within the EcoStress data set (available on the NASA website), processed the images using QGIS and then exported the result to a raster image. Our search for images that were cloud-free during the the June 24-29, 2021 heat dome event yielded one cloud-free photo of Portland on June 29, 2021 at 4:30pm on the last day of the event. The high temp for June 25: 94F; June 26: 108F; June 27: 112F; June 28: 115F; and June 29: 92F.
+
+Then, using the White House Council on Environmental Quality's (CEQ) Climate and Economic Justice Screening Tool (CEJST), we find census tracts within the City of Portland that are identified as health disadvantaged to help target short and long-term interventions. The CEJST tool uses data sets as indicators of burdens. The burdens are organized into categories. A community is highlighted as disadvantaged on the CEJST map if it is in a census tract that is (1) at or above the threshold for one or more environmental, climate, or other burdens, and (2) at or above the threshold for an associated socioeconomic burden. In addition, a census tract that is completely surrounded by disadvantaged communities and is at or above the 50% percentile for low income is also considered disadvantaged. Burdens are identified for climate change, energy, health, housing, legacy pollution, transportation, water & waste water and workforce development. For our project, we considered census tracts that were defined as health disadvantaged for heat vulnerability. Health disadvantaged is defined as ARE at or above the 90th percentile for asthma OR diabetes OR heart disease OR low life expectancy AND are at or above the 65th percentile for low income [@noauthor_climate_2022]. Multnomah County also reports that 78% of 72 people who died in 2021 heatwave were 60years and older and 71% of them lived alone [@noauthor_2021_2022].
+
+Finally, we calculated zonal statistics for the land surface temperature raster and the health-disadvantaged census tracts. Zonal statistics are useful in studying the effects of urbanization on surface temperatures. Structures like roads, buildings, and parking lots characterize urban areas. Such built-up areas exhibit higher temperatures than the surrounding natural landscapes--a phenomenon known as an urban heat island effect. Higher temperatures lead to heat waves, higher energy costs, altered hydrological cycles, etc. Here, zonal statistics of temperature by census tract (e.g., mean surface temperature by census tract) are used to understand temperature variations within cities where census tracts are identified as health disadvantaged. Such data are useful for monitoring the effects of urbanization, for climate change, and for gauging the effectiveness of intervention measures [@njambi_introduction_2022].
+
+## Results
+
+### Attach packages
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(dplyr)
+library(raster)
+library(sf)
+library(tidyverse)
+library(ggtext) 
+library(showtext)
+#sysfonts::font_add_google("Lato", regular.wt = 300, bold.wt = 700) 
+library(exactextractr)
+library(kableExtra)
+library(mapview)
+library(RColorBrewer)
+```
+
+### Define raster of land surface temeperature (LST) in Portland OR 06292021
+
+```{r lst_raster}
+landsat_pdx_june29 <- raster("City_of_Portland_OR_LST_06292022_F.tif") 
+
+# gives info like extent, crs, min/max
+landsat_pdx_june29 
+
+# gives distribution summary based on a sample
+summary(landsat_pdx_june29) 
+
+```
+
+### Load water features in Portland, OR
+
+```{r water}
+water <- sf::st_read("Portland_Water_Boundary/Portland_Water_Boundary.shp") %>%
+  # use the same coordinate reference system as the landsat data
+  st_transform(st_crs(landsat_pdx_june29)) 
+ 
+```
+
+### Load Multnomah Coounty Climate and Economic Justice Screening Tool (CEJST) census tracts using CEJST health defined burden
+
+```{r tracts}
+query_str <- str_c('SELECT * FROM "Multnomah_Co_CEJST_Census_Tracts" WHERE',
+                   ' ((AF_PFS  >=  0.90)  OR',
+                   ' (DF_PFS  >= 0.90) OR',
+                   ' (HDF_PFS >= 0.90) OR',
+                   ' (LLEF_PFS  >= 0.90))  AND',
+                   ' (P200_I_PFS  >=  0.65) AND',
+                   ' GEOID10  != \'41051009604\' AND',
+                   ' GEOID10  != \'41051009801\' AND', 
+                   ' GEOID10  != \'41051010001\' AND',
+                   ' GEOID10  != \'41051010410\' AND', 
+                   ' GEOID10  != \'41051010408\'')
+
+tracts <- sf::st_read("Multnomah_Co_CEJST/Multnomah_Co_CEJST_Census_Tracts.shp", query = query_str) %>%
+  # use the same coordinate reference system as the landsat data
+  st_transform(st_crs(landsat_pdx_june29)) 
+
+# To plot this data with ggplot2 I first converted the raster values to a dataframe in two steps.
+temp_spdf <- as(landsat_pdx_june29, "SpatialPointsDataFrame")
+temp_df <- as_tibble(temp_spdf)
+colnames(temp_df) <- c("value", "x", "y")
+
+# Then I also converted the water data to an sp object in order to use the coord_equal() function in ggplot2, more on that later.
+water_sp <- as(water, "Spatial")
+tracts_sp <- as(tracts, "Spatial")
+```
+
+### Map 1: Portland OR LST map for June 29, 2021
+
+```{r map1, message=FALSE, warning=FALSE}
+labels <- tibble(x = c(-122.81, -122.75, -122.60, -122.72, -122.6, -122.75, -122.57, -122.55, -122.62, -122.60, -122.83, -122.65 ),
+                 y = c(45.58, 45.55, 45.58, 45.52, 45.56, 45.59, 45.49, 45.51, 45.50, 45.62, 45.50, 45.44 ),
+                 lab = c("West Hills", "NW Industrial area", "Portland Airport", "Downtown", "Cully" , "St. Johns", 
+                         " Kelly Butte", "Far East PDX", "Mt. Tabor", "**Hotter:** Hotspots in<br>St. Jones, PDX Airport<br> Cully, and greater East Portland", 
+                         "**Cooler:** West <br>Hills Columbia slough<br>wetlands Mt Tabor,<br> Powell Butte", "**Urban green spaces** are an invaluable<br>resources for cooling urban neighborhoods.<br>They help promote walkability and 
+improve<br>quality of living. Even a few trees help!"))
+                                
+ggplot() +
+  geom_raster(data = temp_df, aes(x = x, y = y,  fill = value), interpolate = TRUE) +
+  geom_polygon(data = water_sp, aes(x = long, y = lat, group = group), color = "gray90", fill = "white") +
+  geom_richtext(data = labels, aes(x = x, y = y, label = lab), fill = NA, label.color = NA, # remove background and outline
+                label.padding = grid::unit(rep(0, 4), "pt"),  color = "#656c78", hjust = 0, size = 3)+
+  theme_minimal() +
+  coord_equal() +
+  scale_fill_gradientn(colors = rcartocolor::carto_pal(name = "TealRose", n = 7), breaks = c(67.1, 85.7, 102.9), labels = c("66 F", "85", "102"), name = "") +
+
+theme(
+  axis.text = element_blank(),
+  axis.title = element_blank(),
+  panel.grid = element_line("transparent"),
+  plot.caption.position = "plot",
+  plot.caption = element_text(hjust = 0)) +
+labs(caption = "Portland, OR LST map for June 29, 2021, 67.1 to 102.9 F\nSource: NASA ECOSTRESS")
+
+```
+
+### Map 2: Portland OR LST map for June 29, 2021 showing areas that were more than 90 F
+
+```{r map2, message=FALSE, warning=FALSE}
+over90 <- temp_df %>%
+  filter(value >=90) # where the value is 90 or greater
+
+ggplot() +
+  geom_raster(data = temp_df, aes(x = x, y = y), fill = "gray90", interpolate = TRUE) +
+  geom_raster(data = over90, aes(x = x, y = y), fill = "#d0587e") +
+  geom_polygon(data = water_sp, aes(x = long, y = lat, group = group), color = "gray90", fill = "white") +
+  theme_minimal() +
+  coord_equal() +
+  theme(legend.position = "bottom",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_line("transparent"),
+        plot.caption = element_text(hjust = 0)) +
+  guides(fill = guide_colourbar(barheight = 0.3, barwidth = 15, direction = "horizontal", ticks = FALSE)) +
+  labs(caption = "Portland, OR LST map for June 29, 2021 > 90 F\nSource: NASA ECOSTRESS")
+
+```
+
+### Map 3: Portland OR LST map for June 29, 2021 showing areas that were less than 80 F
+
+```{r map3, message=FALSE, warning=FALSE}
+under80 <- temp_df %>%
+  filter(value <= 80)
+
+ggplot() +
+  geom_raster(data = temp_df, aes(x = x, y = y), fill = "gray90", interpolate = TRUE) +
+  geom_raster(data = under80, aes(x = x, y = y), fill = "#009392") +
+  geom_polygon(data = water_sp, aes(x = long, y = lat, group = group), color = "gray90", fill = "white") +
+  theme_minimal() +
+  coord_equal() +
+  theme(legend.position = "bottom",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_line("transparent"),
+        plot.caption = element_text(hjust = 0)) +
+  guides(fill = guide_colourbar(barheight = 0.3, barwidth = 15, direction = "horizontal", ticks = FALSE)) +
+  labs(caption = "Portland, OR LST map for June 29, 2021 < 80 F\nSource: NASA ECOSTRESS")
+
+```
+
+### Map 4: Portland OR LST map for June 29, 2021 with census tract overlays of disadvantaged health communities
+
+```{r map4, message=FALSE, warning=FALSE}
+ggplot() +
+  geom_raster(data = temp_df, aes(x = x, y = y,  fill = value), interpolate = TRUE) +
+  geom_polygon(data = water_sp, aes(x = long, y = lat, group = group), color = "gray90", fill = "white") +
+  geom_polygon(data = tracts_sp, aes(x = long, y = lat, group = group), color = "black", fill = NA) +
+  #geom_sf_text(data = tracts, aes(label = GEOID10), check_overlap = TRUE) +
+  #geom_sf_text(data = tracts, aes(label = mean), check_overlap = TRUE) +
+  theme_minimal() +
+  coord_equal() +
+  scale_fill_gradientn(colors = rcartocolor::carto_pal(name = "TealRose", n = 7), breaks = c(67.1, 85.7, 102.9), labels = c("66 F", "85", "102"), name = "") +
+  theme(legend.position = "bottom",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_line("transparent"),
+        plot.caption = element_text(hjust = 0)) +
+  guides(fill = guide_colourbar(barheight = 0.3, barwidth = 20, direction = "horizontal", ticks = FALSE)) +
+  labs(caption = "Portland, OR LST map for June 29, 2021 with Health Disadvantaged Tracts\nSource: NASA ECOSTRESS")
+
+```
+
+### Calculate data frame of count, min, max, mean, stdev zonal statistics for each health disadvantaged census tract
+
+```{r zonestats, message=FALSE, warning=FALSE}
+# calculate data frame of count, min, max, mean, stdev zonal statistics for each census tract
+tracts <- cbind(tracts,
+                exact_extract(landsat_pdx_june29,
+                              tracts,
+                              c('count', 'min', 'max', 'mean', 'stdev')))
+# rename columns, select only health disadvantaged and zone statistics
+zone_statistics <- st_set_geometry(tracts, NULL) %>%
+  rename("LSTF_COUNT" = "count", "LSTF_MIN" = "min", "LSTF_MAX" = "max",
+         "LSTF_MEAN" = "mean", "LSTF_STD" = "stdev") %>%
+  dplyr::select(GEOID10, AF_PFS, DF_PFS, HDF_PFS, LLEF_PFS, P200_I_PFS,
+                LSTF_COUNT, LSTF_MIN, LSTF_MAX, LSTF_MEAN, LSTF_STD) %>%
+  arrange(desc(LSTF_MEAN))
+# print table in lanscape on its own page
+landscape(kable(zone_statistics,
+                "latex",
+                caption = "Portland Health Disadvantaged Tracts and Zone Statistics.") %>% 
+  kable_styling(latex_options="scale_down"))
+```
+
+## Implications and Further Study
+
+The results of our study can be found in Table 1: Portland Health Disadvantaged Tracts and Zone Statistics. The data is sorted in descending order by Land Surface Temperature Mean in degrees fahrenheit (F).
+
+We identified seven census tracts, most located on the Portland Eastside along Interstate 205. Census Tract 41051009101 had the highest mean LST of 88.33 F based on qualifying as health disadvantaged with AF_PRS = 0.91 (asthma) and P200_I\_PFS = 0.77 (Percent of individuals below 200% Federal Poverty Line). Census tract 41051008302 was the most interesting, having a mean LST of 86.28 F with a standard deviation of 3.61 F. The census tract includes heat islands at the base of the forested and cooler Kelly Butte Natural Area.
+
+When designing both short and long-term interventions, the type of data should be considered [@conlon_arset_2022]. Short-term design interventions such as cooling centers should be based upon heat sensitivity. The heat sensitivity data in our study consisted attributes defining health disadvantaged tracts based upon the CEJST definition. Long-term desgn solutions such as the planting of trees should be based upon high land surface temperatures. See Figure 3: Intervention Design.
+
+![Intervention Design. Source: NASA ARSET](Intervention-Design.png){width="60%"}
+
+## References

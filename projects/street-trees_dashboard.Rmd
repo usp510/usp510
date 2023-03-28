@@ -1,0 +1,215 @@
+---
+title: "Explore Portland Street Tree Inventory Data (2010-2016)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+knitr::opts_chunk$set(echo = FALSE, 
+                      message = FALSE, 
+                      warning = FALSE)
+```
+
+Condition
+================
+
+Column
+-----------------------------------------------------------------------
+
+### Share of Trees by Condition and Neighborhood
+Percentage of trees by condition varies by neighborhood. Some neighborhoods have high percentages of trees that are dead or in poor condition, partially contributed by fewer trees in those neighborhood. Trees in poor condition require extra care while dead trees need to be removed and replaced.
+
+```{r}
+source("share_of_trees_by_condition_ngbhd.R")
+barchart <- ggplot(df_nbghd, aes(fill=condition, 
+                                 y=n, 
+                                 x=neighborhood,
+                                 size=tree_count)) + 
+  geom_bar(position="fill", stat="identity") +
+  labs(#title ="Share of Trees by Condition and Neighborhood", 
+    x="Neighborhood", y="Share of Trees", size="", fill="Condition") +
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette="BuPu")
+
+ggplotly(barchart)
+```
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### Percentage of Dead Trees by Neighborhood
+Note: All Portland neighborhoods were fully inventoried, with the exception of Arnold Creek, Ashcreek, Bridlemile, Collins View, Crestwood, Far Southwest, Forest Park, Hayhurst, Linnton, Maplewood, Markham, Marshall Park, Multnomah, Northwest Heights, Pleasant Valley, Southwest Hills, Sylvan Highlands, and unclaimed areas.
+
+
+```{r}
+source("deadtree_map.R")
+ggplotly(map)
+```
+
+### Percentage of Poor Trees by Neighborhood
+Note: All Portland neighborhoods were fully inventoried, with the exception of Arnold Creek, Ashcreek, Bridlemile, Collins View, Crestwood, Far Southwest, Forest Park, Hayhurst, Linnton, Maplewood, Markham, Marshall Park, Multnomah, Northwest Heights, Pleasant Valley, Southwest Hills, Sylvan Highlands, and unclaimed areas.
+
+```{r}
+source("poortree_map.R")
+ggplotly(map)
+```
+
+Function
+================
+
+Column
+-----------------------------------------------------------------------
+
+### Share of Trees by Function and Neighborhood
+Majority of trees in Portland are deciduous. Unlike evergreens, deciduous trees shed off leaves during fall which require clearing out. They also do not offer many benefits in the colder months due to the absence of leaves.
+
+```{r}
+source("share_of_trees_by_function_ngbhd.R")
+barchart <- ggplot(df_function, aes(fill=functional, 
+                                 y=n, 
+                                 x=neighborhood,
+                                 size=tree_count)) + 
+  geom_bar(position="fill", stat="identity") +
+  labs(#title ="Share of Trees by Function and Neighborhood", 
+    x="Neighborhood", y="Share of Trees", size="", fill="Functional")+
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette="BuGn")
+
+ggplotly(barchart)
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Percentage of Evergreen Trees by Neighborhood
+Note: All Portland neighborhoods were fully inventoried, with the exception of Arnold Creek, Ashcreek, Bridlemile, Collins View, Crestwood, Far Southwest, Forest Park, Hayhurst, Linnton, Maplewood, Markham, Marshall Park, Multnomah, Northwest Heights, Pleasant Valley, Southwest Hills, Sylvan Highlands, and unclaimed areas.
+
+```{r}
+source("evergreen_map.R")
+ggplotly(map)
+```
+
+Species
+================
+
+Column
+-----------------------------------------------------------------------
+
+### Share of Trees by Species and Neighborhood
+Nuisance trees are invasive species that threaten public health and safety, degrade the habitat quality of natural areas, and cause economic harm to the landowners. Among the trees in the nuisance list are Norway maple, horse chestnut, tree-of-heaven, golden chain tree, empress tree, and black locust.
+
+```{r}
+source("share_of_trees_by_species_ngbhd.R")
+barchart <- ggplot(df_species, aes(fill=common, 
+                                 y=n, 
+                                 x=neighborhood,
+                                 size=tree_count)) + 
+  geom_bar(position="fill", stat="identity") +
+  labs(#title ="Share of Trees by Function and Neighborhood", 
+    x="Neighborhood", y="Share of Trees", size="", fill="Species")+
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette="Purples")
+
+ggplotly(barchart)
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Percentage of Nuisance Trees by Neighborhood
+Note: All Portland neighborhoods were fully inventoried, with the exception of Arnold Creek, Ashcreek, Bridlemile, Collins View, Crestwood, Far Southwest, Forest Park, Hayhurst, Linnton, Maplewood, Markham, Marshall Park, Multnomah, Northwest Heights, Pleasant Valley, Southwest Hills, Sylvan Highlands, and unclaimed areas.
+
+```{r}
+source("nuisance_map.R")
+ggplotly(map)
+```
+
+Vulnerable
+================
+
+Column
+-----------------------------------------------------------------------
+
+### Share of Vulnerable Trees by Neighborhood
+Vulnerable trees are species that are in poorest condition and are highly prone to pests and diseases. These trees include hawthorn, cherry, plum, crabapple, and birch.
+
+
+```{r}
+source("share_of_trees_by_vulnerability_ngbhd.R")
+barchart <- ggplot(df_vulnerable, aes(fill=scientific, 
+                                 y=n, 
+                                 x=neighborhood,
+                                 size=tree_count)) + 
+  geom_bar(position="fill", stat="identity") +
+  labs(#title ="Share of Vulnerable Trees by Neighborhood", 
+    x="Neighborhood", y="Share of Trees", size="", fill="Vulnerable")+
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette="PuRd")
+
+ggplotly(barchart)
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Percentage of Vulnerable Trees by Neighborhood
+Note: All Portland neighborhoods were fully inventoried, with the exception of Arnold Creek, Ashcreek, Bridlemile, Collins View, Crestwood, Far Southwest, Forest Park, Hayhurst, Linnton, Maplewood, Markham, Marshall Park, Multnomah, Northwest Heights, Pleasant Valley, Southwest Hills, Sylvan Highlands, and unclaimed areas.
+
+```{r}
+source("vulnerable_map.R")
+ggplotly(map)
+```
+
+
+Edible
+================
+
+Column
+-----------------------------------------------------------------------
+
+### Share of Fruit Trees by Neighborhood
+Most fruit-bearing trees are susceptible to insects and diseases and can become messy if the fruits are not routinely harvested. Falling fruits along sidewalks could also harm pedestrians and damage nearby vehicles.
+
+```{r}
+source("share_of_trees_by_edible_ngbhd.R")
+barchart <- ggplot(df_edible, aes(fill=edible, 
+                                 y=n, 
+                                 x=neighborhood,
+                                 size=tree_count)) + 
+  geom_bar(position="fill", stat="identity") +
+  labs(#title ="Share of Fruit Trees by Neighborhood", 
+    x="Neighborhood", y="Share of Trees", size="", fill="Edible")+
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette="BuPu")
+
+ggplotly(barchart)
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Percentage of Fruit Trees by Neighborhood
+Note: All Portland neighborhoods were fully inventoried, with the exception of Arnold Creek, Ashcreek, Bridlemile, Collins View, Crestwood, Far Southwest, Forest Park, Hayhurst, Linnton, Maplewood, Markham, Marshall Park, Multnomah, Northwest Heights, Pleasant Valley, Southwest Hills, Sylvan Highlands, and unclaimed areas.
+
+```{r}
+source("fruittree_map.R")
+ggplotly(map)
+```

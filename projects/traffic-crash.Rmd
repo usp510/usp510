@@ -1,0 +1,744 @@
+---
+title: "Equity analysis of pedestrian and cyclist collisions in Portland, OR"
+author: "Jack Shira and Julia Plotts"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+date: "`r format(Sys.time(), '%d %B %Y')`"
+---
+
+```{r setup-knitr, include = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.fullwidth = TRUE
+)
+```
+
+```{r imports-and-includes}
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(RColorBrewer)
+library(sf)
+library(tigris)
+library(colorRamps)
+library(leaflet)
+library(plotly)
+library(wesanderson)
+
+source("./data.R")
+source("./graphics.R")
+```
+
+```{r styles, results="asis"}
+cat("
+<style>
+body {
+  font-family: Calibri;
+}
+.leaflet-container {
+    background: #FFF;
+}
+</style>
+")
+```
+
+```{r setup-datasets}
+crashes <- load_dataset("crash")
+equity_regions <- load_dataset("equity")
+vulnerability_regions <- load_dataset("vulnerability")
+
+pdx_crashes <- crashes |>
+  filter(URB_AREA_L == "Portland UA") |>
+  filter(CRASH_TYP1 %in% c("Pedestrian", "Pedalcyclist"))
+```
+
+# Introduction
+
+Pedestrian and cycling collisions have been on the rise in the United States. It is important to use an equity lens to examine this trend because previous research indicates that certain groups are disproportionately affected (Mansfield et al., 2018; Schneider, 2020). This report examines automobile collisions involving pedestrians and cyclists and the correlation with socio-demographic factors, such as race, income, and education. Because obtaining information on individual victims of automobile collisions can be challenging, we use census tract data as a proxy measure for socio-demographic factors. This allows us to examine the frequency of crashes at the neighborhood scale.
+
+The Environmental Justice lens provides a valuable framework for examining equity at the neighborhood scale. In the United States, transportation decisions were often made in a society structured by race and class, resulting in ongoing disparities (Bullard et al., 2004). Heavy traffic often cuts through low-income communities of color, as they have historically been unable to fight the construction of arterial roads and highways (Bullard et al. 2004). As a result, these communities often bear the burden of high-speed, high-volume traffic.
+
+Not only are disadvantaged neighborhoods more likely to be the sites of unwanted large scale transportation projects, disadvantaged households are more likely to be pushed to less desirable areas, including those with heavy traffic, following demographic shifts toward city centers (Pulido, 2000). In The politics of pollution, Bullard and Wright (1986) discuss how individuals compete for neighborhood amenities while resisting “disamenities” (p.73). In the context of safe streets, amenities can be defined as traffic calming features, pedestrian infrastructure, or bicycle lanes, and disamenities might be arterial roads or freeways. People of color and low-income individuals have less bargaining power and are, thus, not only subject to a disproportionate share of society's externalities, they are often “trapped” in dangerous environments without the financial means to pursue better living situations (Bullard and Wright, 1986, p. 71). Research by the Oregon Department of Transportation on equity and traffic collisions supports the hypothesis that people of color are more at risk of pedestrian collisions (McNeil and Roll, 2021).
+
+Based on the aforementioned background, it is likely that pedestrians in disadvantaged communities face a higher risk of automobile collisions compared to their wealthier counterparts. However, little research has been done on whether similar equity patterns exist in automobile-cyclist collisions. This analysis aims to explore pedestrian and cyclist crash incidents in the Portland area, comparing census tract data with crash records from the Oregon Department of Transportation (ODOT).
+
+# Maps
+
+```{R setup-map-data}
+regions <- vulnerability_regions |>
+  st_join(equity_regions)
+
+crash_by_region <- pdx_crashes |>
+  st_join(regions, left = FALSE)
+
+regions$crash_count <- lengths(st_intersects(regions, pdx_crashes))
+regions$crashes_per_1000 <- (regions$crash_count / regions$PopTotal) * 1000
+```
+
+```{r setup-map-template}
+base_map <- leaflet(
+  options = leafletOptions(
+    zoomControl = FALSE,
+    minZoom = 11, maxZoom = 11,
+    attributionControl = FALSE,
+    dragging = FALSE
+  ),
+)
+
+build_map <- function(
+    dataset,
+    values,
+    palette,
+    labels,
+    label_fmt,
+    reverse_palette = FALSE) {
+  base_map |>
+    addPolygons(
+      data = dataset,
+      color = "#777", weight = 1, smoothFactor = 0.5,
+      opacity = ".8", fillOpacity = 0.4,
+      # TODO: Get the name for the tract.
+      label = labels,
+      fillColor = ~ colorNumeric(
+        palette = palette,
+        domain = values
+      )(values),
+      highlightOptions = highlightOptions(
+        weight = 2,
+        color = "black",
+        bringToFront = TRUE
+      )
+    ) |>
+    addLegend(
+      pal = colorNumeric(
+        palette = palette,
+        domain = values,
+        na.color = NA,
+        reverse = reverse_palette
+      ),
+      values = values,
+      opacity = 0.7,
+      title = NULL,
+      position = "bottomleft",
+      labFormat = label_fmt
+    )
+}
+
+my_theme <- function() {
+  theme_fivethirtyeight() +
+    theme(
+      axis.title.x = element_text(margin = margin(t = 10)),
+      axis.title.y = element_text(margin = margin(r = 10))
+    )
+}
+```
+
+## Vulnerability Score
+
+The vulnerability score (from 0 - 100) is a metric developed by the Portland Bureau of Planning and Sustainability to measure the vulnerability of neighborhoods to changing economic conditions, with the objective to identify areas that are susceptible to displacement. The score is based on census data on race, income, and education. Census tracts with high vulnerability scores have more residents who meet the following criteria:
+Are “housing cost burdened,” i.e. more likely to pay 30% or more of their income on housing.
+
+- Belong to communities of color, especially Black and Indigenous communities.
+- Lack college degrees.
+- Have lower incomes.
+
+```{r vulnerability-score-map}
+build_map(
+  dataset = regions,
+  values = regions$vulnerability_score,
+  palette = "YlOrRd",
+  labels = regions$vulnerability_score,
+  label_fmt = labelFormat()
+)
+```
+
+As shown in the map above, some of Portland's most vulnerable neighborhoods (indicated in red) are in the North and Far East. Due to increased housing prices, especially in centrally located neighborhoods such as the historically Black Albina neighborhood and the Alberta area, many disadvantaged communities have been pushed to more affordable areas further away from the city center (Gibson, 2007). This may explain the pattern we see in the above map.
+
+In the following data visualization exercise, we compare the prevalence of pedestrian and bicycle crashes based on vulnerability scores to see if there is a correlation between vulnerability (as determined by the Bureau of Planning and Sustainability) and crash incidences.
+
+## Percentage non-White or Hispanic
+
+While the vulnerability score outlined above does take into consideration the racial composition of each census tract, we are able to isolate the percentage of each tract that is non-white or hispanic.
+
+```{r percentage-non-white-map, fig.fullwidth = TRUE}
+build_map(
+  dataset = regions,
+  values = regions$PctPopNonWhiteOrHispanic,
+  palette = "YlGnBu",
+  labels = ~ paste0(regions$PctPopNonWhiteOrHispanic, "%"),
+  label_fmt = labelFormat(suffix = "%", between = ", ")
+)
+```
+
+In the map above, we see a similar trend with vulnerability score, with the highest percentages of non-white and hispanic being in the North and Far East. This may be a confirmation that racial composition is either directly or indirectly a major influence over the vulnerability of specific neighborhoods.
+
+## Income
+
+Next, we isolate the median household income for each tract. Again, this is accounted for in the vulnerability calculations.
+
+```{r income-map}
+build_map(
+  dataset = regions,
+  values = regions$HHMedianIncome,
+  palette = "PRGn",
+  labels = ~ paste0("$", formatC(HHMedianIncome, big.mark = ",")),
+  label_fmt = labelFormat(
+    prefix = "$",
+    between = ", ",
+    transform = function(x) sort(x, decreasing = TRUE)
+  ),
+  reverse_palette = TRUE
+)
+```
+
+In this map, we see a slight deviation from the racial composition map we saw before. Instead of seeing low income rates in both the North and Far East, we instead see concentrations in the Far East and Downtown. There does seem to be some correlation between the highest median household income and low percentages of racial composition.
+
+## Crashs per 1000 people
+
+Finally, we have a map of the aggregated crashes per 1000 people by census tract. This is accomplished by counting the number of crashes in the ODOT crash data set for each tract area. This is then scaled by the total population to achieve a crash count per 1000 people. This normalization of the data should provide a more insightful view into where crashes are more likely to occur.
+
+```{r crash-map}
+build_map(
+  dataset = regions,
+  values = regions$crashes_per_1000,
+  palette = "OrRd",
+  labels = ~ paste0(
+    formatC(regions$crashes_per_1000, format = "f", digits = 1),
+    " crashes per 1000 people"
+  ),
+  label_fmt = labelFormat()
+)
+```
+
+Interestingly, we see that Downtown has several relatively high crashes per 1000 people. This likely due to the increased foot traffic in the area, coupled with the density of streets there.
+
+# Charts
+
+```{R setup-regression-data}
+crashes_by_tract <- regions |>
+  group_by(TRACTCE20) |>
+  reframe(crash_count = sum(crash_count))
+
+vulnerability_regions <- vulnerability_regions |>
+  left_join(crashes_by_tract) |>
+  mutate(crashes_per_1000 = (crash_count / Total_population_tract) * 1000)
+
+equity_regions <- equity_regions |>
+  left_join(crashes_by_tract, by = join_by(TRACT == TRACTCE20)) |>
+  mutate(crashes_per_1000 = (crash_count / PopTotal) * 1000)
+```
+
+## Collision trends over time
+
+The line chart below shows data disaggregated by collision type (pedestrian and cyclist) to visualize trends from 2007 to 2020. collision incidents for cyclists peaked around 2012 and there has been a decline since. Pedestrian collision incidents peaked in 2016 and is in decline. There are fewer data points for 2020 because of a significant decrease in commuting due to the pandemic lock-down.
+
+```{r pedestrian-pedalcyclist-barchart, collapse = TRUE}
+ggplot(pdx_crashes, aes(x = CRASH_YR_N, y = ..count.., group = CRASH_TYP1)) +
+  geom_line(stat = "count", size = 1, aes(color = CRASH_TYP1)) +
+  geom_point(stat = "count", size = 2, aes(color = CRASH_TYP1)) +
+  my_theme() +
+  labs(
+    title = "Pedestrian and cyclist collisions from 2007- 2020",
+    x = "Year",
+    y = "Counts"
+  ) +
+  theme(axis.text.x = element_text(angle = 45)) +
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Set2", name = "")
+
+```
+
+### Fatal Collision Trends
+
+However, isolating by fatal collisions paints a different picture. Fatal pedestrian collisions appear to be on an upward trend. Numbers have not significantly decreased from 2019 to 2020 despite lower traffic levels due to the pandemic lock down. For cycling that number has stayed relatively steady. In the Crash Severity section we will will compare fatal crashes across different vulnerability scores. 
+
+```{r}
+crash_fatal <- filter(pdx_crashes, CRASH_SV_1 == "Fatal")
+
+ggplot(crash_fatal, aes(x = CRASH_YR_N, y = ..count.., group = CRASH_TYP1)) +
+  geom_line(stat = "count", size = 1, aes(color = CRASH_TYP1)) +
+  geom_point(stat = "count", size = 2, aes(color = CRASH_TYP1)) +
+  my_theme() +
+  labs(
+    title = "Fatal Pedestrian and Cyclist Collisions from \n2007- 2020",
+    x = "Year",
+    y = "Counts"
+  ) +
+  theme(axis.text.x = element_text(angle = 45)) +
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Set2", name = "")
+```
+
+## Comparing by Census Tract Socio-demographic Factors
+
+We disaggregated collision data by pedestrians and cyclists to compare across census tracts, comparing distributions of pedestrian and cyclist collision incidents by the census tract vulnerability score, percent population BIPOC, average household income. In subsequent figures we focus on vulnerability score as it is a good representation of race and income, along with other measures, such as housing cost burden and education. 
+
+### Average Collisions by Vulnerability Score
+
+We disaggregated data into pedestrian and cyclist crashes to create two tables. Since there are more census tracts with a middle range vulnerability score we grouped census tracts by increments of ten, i.e. group one is all census tracts scored 1-10, group two is 11-20, and so on, and then found the average number of crashes by each group. The first table shows the average number of pedestrian crashes by each vulnerability group. The second table shows cycling crashes. 
+
+```{r}
+ped_filtered <- crash_by_region %>%
+  filter(CRASH_TYP1 == "Pedestrian")
+
+bike_filtered <- crash_by_region %>%
+  filter(CRASH_TYP1 == "Pedalcyclist")
+
+#by ped crash type
+# new column to group vulnerability scores by 10
+ped_filtered$grouped_vulnerability_score <-
+  cut(ped_filtered$vulnerability_score,
+      breaks = seq(0, 100, 10),
+      right = FALSE)
+
+# count the number of pedestrian  crashes by grouped
+# vulnerability score and census tract
+crash_agg <-
+  aggregate(
+    cbind(Pedestrian = CRASH_TYP1 == "Pedestrian") ~
+      TRACT + grouped_vulnerability_score,
+    data = ped_filtered[ped_filtered$CRASH_TYP1 %in% c("Pedestrian"), ],
+    FUN = function(x) sum(!is.na(x))
+  )
+
+# calculate the average for each grouped vulnerability score
+ped_crash_avg <-
+  aggregate(
+    cbind(Pedestrian) ~ grouped_vulnerability_score,
+    data = crash_agg,
+    FUN = mean
+  )
+
+# new table
+ped_crash_avg
+
+#by bike crash type
+# new column to group vulnerability scores by 10
+bike_filtered$grouped_vulnerability_score <-
+  cut(bike_filtered$vulnerability_score,
+      breaks = seq(0, 100, 10),
+      right = FALSE)
+
+# count the number of bike  crashes by grouped
+# vulnerability score and census tract
+crash_agg <-
+  aggregate(
+    cbind(Pedalcylist = CRASH_TYP1 == "Pedalcyclist") ~
+      TRACT + grouped_vulnerability_score,
+    data = bike_filtered[bike_filtered$CRASH_TYP1 %in% c("Pedalcyclist"), ],
+    FUN = function(x) sum(!is.na(x)))
+
+# calculate the average for each grouped vulnerability score
+bike_crash_avg <-
+  aggregate(
+    cbind(Pedalcylist) ~ grouped_vulnerability_score,
+    data = crash_agg,
+    FUN = mean)
+
+# new table
+bike_crash_avg
+```
+
+### Pedestrian Collisions by Vulnerability Score
+
+The bar charts below display the average number of pedestrian (the first chart) and cyclist (second chart) collisions by the vulnerability score group. While there are over 7,000 collisions in the whole data set there are many census tracts with no collisions, therefore the average number of collisions by vulnerability group is not very high. However, based on the chart pedestrian collisions are more frequent in high vulnerability neighborhoods than in low vulnerability neighborhoods. 
+
+```{r}
+ggplot(ped_crash_avg, aes(x = grouped_vulnerability_score, y = Pedestrian)) +
+  geom_bar(stat = "identity") +
+  my_theme() +
+  labs(x = "Grouped Vulnerability Score", y = "Pedestrian Crashes",
+       title = "Average Pedestrian Crashes by \nGrouped Vulnerability Score") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = 6.5, color = "red", linetype = "dashed")
+```
+
+### Cycling Collisions by Vulnerability Score
+
+In contrast, average cycling collisions between low and high vulnerability neighborhoods is not very different, although there appear to be more collisions in neighborhoods scored between 60-70. It is worth noting that any score above 60 is considered "vulnerable."
+
+```{r}
+ggplot(bike_crash_avg, aes(x = grouped_vulnerability_score, y = Pedalcylist)) +
+  geom_bar(stat = "identity") +
+  my_theme() +
+  labs(x = "Grouped Vulnerability Score", y = "Bike Crashes",
+       title = "Average Bike Crashes by \nGrouped Vulnerability Score") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = 6.5, color = "red", linetype = "dashed")
+
+```
+
+### Collisions per 1000 people by Vulnerability Score
+
+Here we look at the number of crashes per 1000 for each census tract. There normalized view points to an obvious increasing trend as the vulnerability score goes up.  
+
+```{r vulnerability-regression-analysis}
+plot <- ggplot(vulnerability_regions) +
+  aes(x = vulnerability_score, y = crashes_per_1000) +
+  geom_point() +
+  stat_smooth(
+    method = "lm",
+    formula = y ~ poly(x, 2),
+    geom = "smooth"
+  ) +
+  labs(
+    title = "Crash Count by Vulnerability Score",
+    x = "Vulnerability Score",
+    y = "Crash Count",
+  ) +
+  my_theme() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(labels = scales::comma)
+
+ggplotly(plot) |>
+  config(displayModeBar = FALSE)
+```
+
+## Average Collisions by Percent Non-White or Hispanic
+
+There are few census tracts with a higher percentage of non-white or Hispanic residents, therefore comparison across census tracts is difficult. To work around this issue we created two tables (pedestrian and cycling collisions) that compare the average number of collisions grouped by percent non-white or Hispanic. 
+
+```{r}
+#by ped crash type
+# new column to group PctPopNonWhiteOrHispanic by 10
+ped_filtered$grouped_PctPopNonWhiteOrHispanic <-
+  cut(ped_filtered$PctPopNonWhiteOrHispanic,
+      breaks = seq(0, 100, 10),
+      right = FALSE)
+
+# count the number of pedestrian  crashes by
+# grouped percent race and census tract
+race_ped_crash_agg <-
+  aggregate(cbind(Pedestrian = CRASH_TYP1 == "Pedestrian") ~
+    TRACT + grouped_PctPopNonWhiteOrHispanic,
+  data = ped_filtered[ped_filtered$CRASH_TYP1 %in% c("Pedestrian"), ],
+  FUN = function(x) sum(!is.na(x)))
+
+# average for each grouped race percentage
+race_ped_crash_avg <-
+  aggregate(cbind(Pedestrian) ~ grouped_PctPopNonWhiteOrHispanic,
+            data = race_ped_crash_agg,
+            FUN = mean)
+
+# new table
+race_ped_crash_avg
+
+#by bike crash type
+# new column to group vulnerability scores by 10
+bike_filtered$grouped_PctPopNonWhiteOrHispanic <-
+  cut(bike_filtered$PctPopNonWhiteOrHispanic,
+      breaks = seq(0, 100, 10),
+      right = FALSE)
+
+# count the number of bike crashes by grouped
+# PctPopNonWhiteOrHispanic and census tract
+race_bike_crash_agg <-
+  aggregate(
+    cbind(Pedalcylist = CRASH_TYP1 == "Pedalcyclist") ~
+      TRACT + grouped_PctPopNonWhiteOrHispanic,
+    data = bike_filtered[bike_filtered$CRASH_TYP1 %in% c("Pedalcyclist"), ],
+    FUN = function(x) sum(!is.na(x)))
+
+# average for each grouped PctPopNonWhiteOrHispanic
+race_bike_crash_avg <-
+  aggregate(
+    cbind(Pedalcylist) ~ grouped_PctPopNonWhiteOrHispanic,
+    data = race_bike_crash_agg,
+    FUN = mean)
+
+# new table
+race_bike_crash_avg
+```
+
+### Pedestrian Collisions by Race
+
+The bar charts below display the average number of pedestrian (the first chart) and cyclist (second chart) collisions by the census tracts grouped by percent non-white or Hispanic (BIPOC). Again, it is important to note that while there are over 7,000 collisions in the whole data set there are many census tracts with no collisions, therefore the average number of collisions by percent non-white or Hispanic is not very high. However, based on the chart pedestrian collisions are more frequent in census tracts with 20% or more non-white or Hispanic residents.  
+
+```{r}
+ggplot(race_ped_crash_avg,
+       aes(x = grouped_PctPopNonWhiteOrHispanic,
+       y = Pedestrian)) +
+  geom_bar(stat = "identity") +
+  my_theme() +
+  labs(x = "Grouped Percent BIPOC", y = "Pedestrian Crashes",
+       title = "Average Pedestrian Crashes by \nGrouped Percent BIPOC") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = 2.5, color = "red", linetype = "dashed")
+```
+
+### Cycling Collisions by Race
+
+Average cycling collisions seem more uniform across census tracts, however the average number of collisions in neighborhoods with 20-30% non-white or Hispanic residents is twice that of the average in other census tracts. 20% non-white or Hispanic seems to be an important demarcation point (see chart below).
+
+```{r}
+ggplot(race_bike_crash_avg,
+       aes(x = grouped_PctPopNonWhiteOrHispanic, y = Pedalcylist)) +
+  geom_bar(stat = "identity") +
+  my_theme() +
+  labs(x = "Grouped Percent BIPOC", y = "Bike Crashes",
+       title = "Average Bike Crashes by \nGrouped Percent BIPOC") +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = 2.5, color = "red", linetype = "dashed")
+```
+
+### Collisions per 1000 people by Race
+
+Here we look at the number of crashes per 1000 for each census tract. This normalized view provides little insight, with the slight trend in the middle of the range likely being caused by the fact that a majority of the tracts fall between 10% and 40%. This is somewhat surprising given the similarities in the maps above and the regression line for vulnerability score above.
+
+```{r race-regression-analysis}
+plot <- ggplot(equity_regions) +
+  aes(x = PctPopNonWhiteOrHispanic / 100, y = crashes_per_1000) +
+  geom_point() +
+  stat_smooth(
+    method = "lm",
+    formula = y ~ poly(x, 2),
+    geom = "smooth"
+  ) +
+  labs(
+    title = "Crash Count by Race",
+    x = "Percent non-white or hispanic",
+    y = "Crash Count",
+  ) +
+  my_theme() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(labels = scales::percent)
+
+ggplotly(plot) |>
+  config(displayModeBar = FALSE)
+```
+
+## Average Collisions by Average Household Income
+
+We create the same two tables to compare the average number of collisions for (both categories) by grouping census tracts by average household incomes. Below are tables for average pedestrian collisions for each group and average bike collisions. 
+
+```{r}
+#by ped crash type
+# new column to group HHMedianIncome by 10000
+ped_filtered$grouped_HHMedianIncome <-
+  cut(ped_filtered$HHMedianIncome,
+      breaks = seq(0,
+                   ceiling(max(ped_filtered$HHMedianIncome) / 10000) * 10000,
+                   10000),
+      right = FALSE)
+
+# count the number of pedestrian  crashes by grouped
+# percent race and census tract
+income_ped_crash_agg <-
+  aggregate(cbind(Pedestrian = CRASH_TYP1 == "Pedestrian") ~
+    TRACT + grouped_HHMedianIncome,
+  data = ped_filtered[ped_filtered$CRASH_TYP1 %in% c("Pedestrian"), ],
+  FUN = function(x) sum(!is.na(x)))
+
+# average for each grouped race percentage
+income_ped_crash_avg <-
+  aggregate(cbind(Pedestrian) ~ grouped_HHMedianIncome,
+            data = income_ped_crash_agg,
+            FUN = mean)
+
+# new table
+income_ped_crash_avg
+
+#by bike crash type
+# new column to group vulnerability scores by 10
+bike_filtered$grouped_HHMedianIncome <-
+  cut(bike_filtered$HHMedianIncome,
+      breaks = seq(0,
+                   ceiling(max(ped_filtered$HHMedianIncome) / 10000) * 10000,
+                   10000),
+      right = FALSE)
+
+# count the number of bike crashes by grouped
+# PctPopNonWhiteOrHispanic and census tract
+income_bike_crash_agg <-
+  aggregate(cbind(Pedalcylist = CRASH_TYP1 == "Pedalcyclist") ~
+    TRACT + grouped_HHMedianIncome,
+  data = bike_filtered[bike_filtered$CRASH_TYP1 %in% c("Pedalcyclist"), ],
+  FUN = function(x) sum(!is.na(x)))
+
+# average for each grouped PctPopNonWhiteOrHispanic
+income_bike_crash_avg <-
+  aggregate(cbind(Pedalcylist) ~ grouped_HHMedianIncome,
+  data = income_bike_crash_agg,
+  FUN = mean)
+
+# new table
+income_bike_crash_avg
+```
+
+
+### Pedestrian Collisions by Average Household Income
+
+As seen in the bar charts below, there is a clear trend in average collisions when we group by income levels. The average number of collisions in census tracts with an average household income below 20K is much higher than any other group. As we move up in income the average number of collisions decreases. $52,200 is the threshold for low income households. 
+
+```{r}
+ggplot(income_ped_crash_avg, aes(x = grouped_HHMedianIncome, y = Pedestrian)) +
+  geom_bar(stat = "identity", position = position_nudge(x = -0.4)) +
+  my_theme() +
+  labs(x = "Average HH Income", y = "Pedestrian Crashes",
+       title = "Average Pedestrian Crashes Grouped by Income") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('20K', '30K', '40K', '50K', '60K', '70K', '80K', '90K', '100K', '101K', '102K', '103K', '104K', '105K', '106K')) +
+  geom_vline(xintercept = 4.2, color = "red", linetype = "dashed" ) +
+  geom_text(x = 5, y = 90, label = "52.2K", color = "red", size = 5, vjust = 1)
+
+```
+
+### Cycling Collisions by Average Household Income
+
+We see the same trend in cycling collisions as well. There appears to be a strong correlation between census tract average income and collision rates. 
+
+```{r}
+ggplot(income_bike_crash_avg, aes(x = grouped_HHMedianIncome, y = Pedalcylist)) +
+  geom_bar(stat = "identity",
+           position = position_nudge(x = -0.4)) +
+  my_theme() +
+  labs(x = "Average HH Income", y = "Bike Crashes", 
+       title = "Average Bike Crashes Grouped by Income") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c('20K', '30K', '40K', '50K', '60K', '70K', '80K', '90K', '100K', '101K', '102K', '103K', '104K', '105K', '106K')) +
+  geom_vline(xintercept = 4.2, color = "red", linetype = "dashed" ) +
+geom_text(x = 5, y = 60, label = "52.2K", color = "red", size = 5, vjust = 1)
+
+```
+ 
+### Collisions per 1000 people by Average Household Income
+
+Here we look at the number of crashes per 1000 for each census tract. This normalized view provides insight into the obvious trend of increased collision rates in lower income areas. The three collision-heavy Downtown tracts clearly stand out around the $40,000 range. 
+
+```{r income-regression-analysis}
+plot <- ggplot(equity_regions) +
+  aes(x = HHMedianIncome, y = crashes_per_1000) +
+  geom_point() +
+  stat_smooth(
+    method = "lm",
+    formula = y ~ poly(x, 2),
+    geom = "smooth"
+  ) +
+  labs(
+    title = "Crash Count by Median Income",
+    x = "Median Income",
+    y = "Crash Count",
+  ) +
+  my_theme() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(labels = scales::dollar)
+
+ggplotly(plot) |>
+  config(displayModeBar = FALSE)
+```
+
+From comparing average collisions counts by vulnerability score, percent non-white or Hispanic, and income, there is a clear trend suggesting that socio-economic factors and collisions rates are strongly correlated.
+
+## Where are the Collisions Occuring?
+
+To determine where collisions are most frequent, we analyzed data on pedestrian and cyclist collisions and classified the streets based on the ODOT's functional classifications. We plotted the vulnerability score (on the x-axis) against the functional classification to identify any patterns with equity. Both charts show a high incidence of collisions on arterial roads and major collector roads (green, blue-green, and blue).
+
+### Pedestrian Collisions and Road Type
+
+Below is a stacked line chart of pedestrian collisions and the functional classification. As we saw in the bar charts in the previous section there are more collisions in higher vulnerability census tracts and many of those collisions appear to be occurring on principal arterial roads. It's important to note these are not average counts for each vulnerability score (as in the previous section) but actual counts including every census tract. There are more census tracts with a middle vulnerability score than both ends of the extreme, hence the bell shaped plot of the area chart above.
+
+```{r}
+ped_reg_filtered <- crash_by_region %>%
+  filter(CRASH_TYP1 == "Pedestrian")
+
+bike_reg_filtered <- crash_by_region %>%
+  filter(CRASH_TYP1 == "Pedalcyclist")
+
+ggplot(ped_reg_filtered, aes(x = vulnerability_score, fill = FC_CD)) +
+    geom_area(stat = "bin",
+              binwidth = 20,
+              position = "stack",
+              alpha = 0.7,
+              aes(y = ..count..)) +
+  labs(fill = "Functional\nClassification",
+       x = "Vulnerability Score",
+       y = "Count") +
+  scale_fill_discrete(labels = c('Interstate', 'Other Freeways\nExpressways', 'Other Principal\nArterial', 'Minor Arterial', 'Collector', 'Minor Collector', 'Local')) +
+  my_theme() +
+  ggtitle("Pedestrian Collision Distributions by Functional \nClassification of Urban Road")
+```
+
+### Cycling Collisions and Road Type
+
+The stacked area chart below shows the number of cycling collisions on urban roads by functional classification. We observe a different pattern compared to that of pedestrian collisions, with more collisions occurring on local streets and in mid-level vulnerability neighborhoods.
+
+```{r}
+ggplot(bike_reg_filtered, aes(x = vulnerability_score, fill = FC_CD)) +
+  geom_area(stat = "bin",
+            binwidth = 20,
+            position = "stack",
+            alpha = 0.7,
+            aes(y = ..count..)) +
+  scale_fill_discrete(labels = c('Interstate', 'Other Freeways\nExpressways', 'Other Principal\nArterial', 'Minor Arterial', 'Collector', 'Minor Collector', 'Local')) +
+  labs(fill = "Functional\nClassification",
+       x = "Vulnerability Score",
+       y = "Count") +
+  my_theme() +
+  ggtitle("Cycling Collision Distributions by Functional \nClassification of Urban Road")
+```
+
+## Severity by vulnerability score
+
+We compared the collision severity in relation to the economic vulnerability of the census tract where the collision occurred. ODOT collision data indicates three levels of severity: non-fatal injury, fatal, property damage only. The x-axis represents the vulnerability score, and the y-axis represents collision count. The plot is then split by the severity of the collision, with fatal collisions in red, non-fatal injury collisions in blue, and property damage-only collisions in yellow. The distribution plots of pedestrian and cyclist collisions are similar and there were few data points for fatal collisions, so both have been combined into one stacked area plot. There are only 173 "fatal" and 101 "property damage only" observations, while there are as many as 6198 "non-fatal injury" observations so the scales of the density plots are quite different.
+
+In the stacked line chart below we see the proportion of fatal, non-fatal injury, and property damage only collision incidents. Although there were fewer fatal collisions than non-fatal, there is an increase in counts in census tracts scored between 40-90. Again, there are more census tracts with average scores than on the extreme ends, hence the bell shaped curve of the plot. 
+
+```{r histogram-desnsity-plots-vulnerability, collapse = TRUE}
+ggplot(crash_by_region, aes(x = vulnerability_score, fill = CRASH_SV_1)) +
+  geom_area(stat = "bin",
+            binwidth = 20,
+            position = "stack",
+            alpha = 0.7, aes(y = ..count..)) +
+  my_theme() +
+  theme(legend.position = "bottom") +
+  labs(fill = "Severity") +
+  xlab("vulnerability score") +
+  ggtitle("Density Distribution of Crash Severity by \nCensus Tract Vulnerability score") +
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 3))
+```
+
+### Isolating by Fatal Crashes
+
+When we isolate by fatal crashes in the histogram below we see that the distributions is left skewed with a mode around the vulnerability score of 80. Although there are fewer census tracts that fall on the higher and lower end of the vulnerability score, there are still many fatal collisions that occur in census tracts with higher vulnerability scores. 
+
+```{r}
+fatal <- crash_by_region %>%
+  filter(CRASH_SV_1 == "Fatal")
+
+ggplot(fatal, aes(x = vulnerability_score, fill = CRASH_SV_1)) +
+  geom_histogram(binwidth = 10) +
+  my_theme() +
+  theme(legend.position = "bottom") +
+  labs(fill = "") +
+  xlab("Vulnerability Score") +
+  ggtitle("Distribution of Fatal Crashes  by \nCensus Tract Vulnerability Score") +
+  scale_fill_manual(values = wes_palette("Darjeeling1", n = 3))
+```
+
+# Conclusion:
+
+We looked at several factors in this report to visualize trends and patterns of pedestrian and cyclist collisions in Portland, Oregon. We compared collisions to socio-demographic factors such as census tract vulnerability score, race, and income. We found that vulnerability score was a cohesive measure of demographic factors so most of our analysis was based on this score. First, we mapped socio-demographic factors and collisions to see the spatial distribution. Second, we plotted the average count of collisions by census tract vulnerability score, percent non-white or Hispanic, and average income, finding that all socio-demographic factors correlated with pedestrian collisions. For cycling collisions, there wasn’t a significant correlation except with the average household income of the census tracts. Third, we looked at what type of roads the collisions were occurring on, finding that a large majority of all collisions occurred on arterial roads and collector roads. For cycling, local roads were also significant. Fourth, we looked at the severity of collisions and compared it with vulnerability scores. Fatal pedestrian and cycling collisions were more common in census tracts with high vulnerability scores. Finally, we plotted a regression plot to visualize crash counts by census tract vulnerability score, percent income non-white or Hispanic, and average household income. These data visualizations highlight the importance of considering socio-demographic factors such as vulnerability sore, race, and income when studying pedestrian and cycling collisions. 
+
+
+# Citations:
+
+Bullard, R. D., Johnson, G. S., & Torres, A. O. (2004). Highway robbery: Transportation racism and new routes to equity. Boston, MA: South End Press.
+
+Bullard, R. D., & Wright, B. (1986). The politics of pollution. Beverly Hills, CA: Sage Publications.
+
+Gibson, K. (2007). Bleeding Albina: A history of community disinvestment, 1940-2000. Transforming Anthropology, 15(1), 3-25. https://doi.org/10.1525/tran.2007.15.1.3
+
+Mansfield, T.J., Peck, D., Morgan, D., McCann, B., & Teicher, P. (2018). The effects of roadway and built environment characteristics on pedestrian fatality risk: A national assessment at the neighborhood scale. Accident Analysis & Prevention, 121, 166–176. 
+
+Oregon Department of Transportation. (2018). Crash analysis and code manual. Retrieved from https://www.oregon.gov/odot/data/documents/cds_code_manual.pdf
+
+Pulido, L. (2000). Rethinking environmental racism: White privilege and urban development in Southern California. Annals of the Association of American Geographers, 90(1), 12-40. https://doi.org/10.1111/0004-5608.00182
+
+Roll, J., & McNeil, N. (2022). Race and income disparities in pedestrian injuries: Factors influencing pedestrian safety inequity. Transportation Research. Part D, Transport and Environment, 107, 103294–. https://doi.org/10.1016/j.trd.2022.103294
+
+Schneider, R.J. (2020). United States Pedestrian Fatality Trends, 1977 to 2016. Transportation Research Record, 2674(9), 1069–1083. 

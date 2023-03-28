@@ -1,0 +1,85 @@
+---
+title: Mapping Land Surface Temperature and Identification of Health Disadvantaged
+  Census Tracts During the June 2021 Portland Heat Dome Using the US Climate and Economic
+  Justice Screening Tool
+author: "Surya Joshi and Greg Cermak"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+During June 25-29, 2021 Portland Oregon experienced a heat dome where temperatures in Portland hit a record 115 F. At least 96 people died in Oregon, most of whom were home alone and had no air-conditioning units. In a study afer it was determined that the heat wave was a freak, 10,000-year event. According to the US Environmental Protection Agency (EPA), heat islands contribute to higher daytime temperatures, reduced nighttime cooling, and higher air-pollution levels. These, in turn, contribute to heat-related deaths and heat-related illnesses such as general discomfort, respiratory difficulties, heat cramps, heat exhaustion, and non-fatal heat stroke. There are a number of methods for deriving a heat vulnerability index. In this study, we develop a raster land surface temperature (LST) map of the City of Portland during the heat dome from the EcoStress data set available from NASA. Then, using the White House Council on Environmental Quality's (CEQ) [Climate and Economic Justice Screening Tool](https://screeningtool.geoplatform.gov/en/methodology#3/33.47/-97.5) (CEJST) we find census tracts within the City of Portland that are identified as health disadvantaged to help target short and long-term interventions. We identified seven census tracts, most located on the Portland Eastside along Interstate 205. Census tract 41051008302 was the most interesting, having a mean LST of 86.28 F with a standard deviation of 3.61 F. The census tract includes heat islands at the base of the forested and cooler Kelly Butte Natural Area.
+
+## Mapview View
+
+```{r mapview, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(dplyr)
+library(raster)
+library(sf)
+library(raster)
+library(tidyverse)
+library(exactextractr)
+library(RColorBrewer)
+library(mapview)
+
+# raster of land surface temeperature (LST) in Portland OR 06292021
+landsat_pdx_june29 <- raster("City_of_Portland_OR_LST_06292022_F.tif")
+
+landsat_pdx_june29
+
+# Query Multnomah Co CEJST census tracts for health disadvantaged tracts
+query_str <- str_c('SELECT * FROM "Multnomah_Co_CEJST_Census_Tracts" WHERE',
+                   ' ((AF_PFS  >=  0.90)  OR',
+                   ' (DF_PFS  >= 0.90) OR',
+                   ' (HDF_PFS >= 0.90) OR',
+                   ' (LLEF_PFS  >= 0.90))  AND',
+                   ' (P200_I_PFS  >=  0.65) AND',
+                   ' GEOID10  != \'41051009604\' AND',
+                   ' GEOID10  != \'41051009801\' AND', 
+                   ' GEOID10  != \'41051010001\' AND',
+                   ' GEOID10  != \'41051010410\' AND', 
+                   ' GEOID10  != \'41051010408\'')
+
+tracts <- sf::st_read("Multnomah_Co_CEJST/Multnomah_Co_CEJST_Census_Tracts.shp", query = query_str) %>%
+  # use the same coordinate reference system as the landsat data
+  st_transform(st_crs(landsat_pdx_june29)) 
+
+# calculate data frame of count, min, max, mean, stdev zonal statistics for each census tract
+tracts <- cbind(tracts, exact_extract(landsat_pdx_june29, tracts, c('count', 'min', 'max', 'mean', 'stdev')))
+
+# Get just the data that makes up the health disadvantaged calculation, the zone statistics and rename columns
+#
+# GEOID10: Census Tract ID
+# AF_PFS: Current asthma among adults aged greater than or equal to 18 years (percentile)
+# DF_PFS: Diagnosed diabetes among adults aged greater than or equal to 18 years (percentile)
+# HDF_PFS: Coronary heart disease among adults aged greater than or equal to 18 years (percentile)
+# LLEF_PFS: Low life expectancy (percentile)
+# P200_I_PFS: Percent of individuals below 200% Federal Poverty Line, imputed and adjusted (percentile)
+# LSTF_COUNT: Land surface temperature data points (counts) within the census tract 
+# LSTF_MIN: Land surface temperature minimum within the census tract in degrees fahrenheit (F) 
+# LSTF_MAX: Land surface temperature maximum within the census tract in degrees fahrenheit (F) 
+# LSTF_MEAN: Land surface temperature mean within the census tract in degrees fahrenheit (F) 
+# LSTF_STD: Land surface temperature standard deviation within the census tract in degrees fahrenheit (F) 
+
+pdx_cejst_tracts <- tracts %>%
+  rename("LSTF_COUNT" = "count", "LSTF_MIN" = "min", "LSTF_MAX" = "max", "LSTF_MEAN" = "mean", "LSTF_STD" = "stdev") %>%
+  dplyr::select(GEOID10, AF_PFS, DF_PFS, HDF_PFS, LLEF_PFS, P200_I_PFS, LSTF_COUNT, LSTF_MIN, LSTF_MAX, LSTF_MEAN, LSTF_STD)
+
+# Get temperature values from the raster
+lst <- raster::stack(landsat_pdx_june29)[[1]]
+
+# Mapview
+pdxlst <- mapview(lst, col.regions = rev(brewer.pal(9, "RdYlBu")), layer.name = "LST")
+pdxcejst <- mapview(pdx_cejst_tracts, color = "black", alpha.regions = 0, layer.name = "PDX CEJST Tracts")
+pdxlst + pdxcejst
+
+```
